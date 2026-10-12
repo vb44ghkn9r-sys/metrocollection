@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Метро 3D</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0f14;--tx:#f1efe8;--dim:#8a93a6;--tok:#f2b705;color-scheme:dark}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);font:16px/1.3 "Arial Narrow","Roboto Condensed",system-ui,sans-serif;overflow:hidden}
+button{font:inherit;color:var(--tx);cursor:pointer}
+.ui{position:fixed;left:0;right:0;padding:12px;display:flex;gap:8px;align-items:center;justify-content:space-between}
+#top{top:0;padding-top:calc(12px + env(safe-area-inset-top,0px))}
+#bot{bottom:0;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));flex-direction:column}
+.pill{background:#ffffff12;border:1px solid #ffffff2a;border-radius:999px;padding:7px 12px;font-weight:700;white-space:nowrap;font-size:15px}
+#tk{background:var(--tok);color:#1a1400;border-color:var(--tok)}
+#go{width:100%;max-width:420px;padding:17px;border:0;border-radius:14px;background:var(--tok);color:#1a1400;font-size:20px;font-weight:700}
+#go:disabled{opacity:.4}
+.row{display:flex;gap:8px;width:100%;max-width:420px}
+.row button{flex:1;padding:11px;background:#ffffff12;border:1px solid #ffffff2a;border-radius:12px}
+.row button:disabled{opacity:.4}
+#stage{position:fixed;left:0;right:0;top:calc(64px + env(safe-area-inset-top,0px));bottom:calc(208px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;justify-content:center;--d:min(52vw,34vh,220px)}
+#tilt{transform-style:preserve-3d;transform:rotateX(-16deg)}
+#idle{transform-style:preserve-3d;animation:idle 7s linear infinite}
+@keyframes idle{to{transform:rotateY(360deg)}}
+#coin{width:var(--d);height:var(--d);position:relative;transform-style:preserve-3d}
+.e{position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(#7d0c14 0 3deg,#d3212b 3deg 6deg)}.e:nth-child(3n){filter:brightness(1.18)}
+.f{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;background:radial-gradient(circle at 30% 24%,#ff8470 0,#ff4333 20%,#e2231a 52%,#a50f18 100%);display:grid;place-items:center;overflow:hidden;box-shadow:inset 0 0 0 calc(var(--d)*.05) #bd1520,inset 0 0 0 calc(var(--d)*.058) #ff6a5a,inset 0 calc(var(--d)*-.03) calc(var(--d)*.06) #00000055}
+.rg{position:absolute;inset:7%;border-radius:50%;background:repeating-conic-gradient(#ffe1db 0 2.2deg,transparent 2.2deg 6deg);-webkit-mask:radial-gradient(circle,transparent 90%,#000 91%);mask:radial-gradient(circle,transparent 90%,#000 91%)}.gl{position:absolute;inset:0;border-radius:50%;background:linear-gradient(115deg,transparent 28%,#ffffff8c 42%,#ffffff1a 50%,transparent 60%);background-size:260% 100%;animation:sheen 3.5s ease-in-out infinite;mix-blend-mode:screen}@keyframes sheen{0%{background-position:100% 0}60%,100%{background-position:-60% 0}}
+.f svg{width:54%;position:relative;z-index:1;filter:drop-shadow(0 calc(var(--d)*.012) 0 #8c0e15) drop-shadow(0 calc(var(--d)*.03) calc(var(--d)*.025) #0007)}#cb{position:relative;display:flex;align-items:center;justify-content:center;perspective:900px}#sh{position:absolute;left:50%;top:calc(50% + var(--d)*.62);width:calc(var(--d)*.85);height:calc(var(--d)*.14);transform:translateX(-50%);background:radial-gradient(ellipse,#000b,transparent 70%);filter:blur(4px)}
+.f1{transform:translateZ(9px)}.f2{transform:rotateY(180deg) translateZ(9px)}
+#sign{display:none;box-sizing:border-box;width:min(92vw,440px);max-height:100%;overflow:hidden;background:#161b26;border:3px solid var(--rc);border-radius:18px;padding:18px;text-align:left}
+#sign.in{animation:drop .55s cubic-bezier(.2,.8,.2,1)}
+@keyframes drop{from{transform:perspective(900px) rotateX(75deg) scale(.6);opacity:0}to{transform:none;opacity:1}}
+.hd{display:flex;align-items:center;gap:10px;color:var(--dim);margin-bottom:10px}
+.bd{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;flex:none}
+#nm{font-size:clamp(26px,8.5vw,42px);line-height:1.1;font-weight:700;overflow-wrap:anywhere;margin:0 0 10px}
+#rr{font-weight:700;color:var(--rc)}
+#nw{margin-top:8px;color:var(--dim);font-size:15px}
+#col{position:fixed;inset:0;background:#0d0f14f5;overflow:auto;padding:calc(14px + env(safe-area-inset-top,0px)) 14px 24px;display:none}
+.lh{display:flex;align-items:center;gap:8px;font-weight:700;margin:16px 0 6px}
+.dot{width:14px;height:14px;border-radius:50%;flex:none}
+.pr{margin-left:auto;color:var(--dim);font-weight:400}
+.st{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:4px 9px;border-radius:8px;border:1px solid #2b3242;color:#4f586c;font-size:14px}
+.chip.own{color:var(--tx);border-color:var(--rc);background:#ffffff0d}
+.r0{--rc:#9aa3b5}.r1{--rc:#3aa0ff}.r2{--rc:#b04dff}.r3{--rc:#ffb02e}
+#bar{height:8px;background:#ffffff1f;border-radius:6px;overflow:hidden;margin:4px 0 8px}#bi{display:block;height:100%;background:var(--rc)}#fc{color:var(--dim);font-size:14px;text-align:center}.chip.fc{outline:2px solid var(--tok)}.chip.lk{opacity:.45}#wh{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:16px}.wb{background:#161b26;border-radius:16px;padding:16px;width:min(100%,420px);display:flex;flex-direction:column;gap:8px}.wb button{padding:12px;border:2px solid var(--rc,#2b3242);background:transparent;border-radius:12px;text-align:left}.wb button:disabled{opacity:.4}#ru{position:fixed;inset:0;background:#0d0f14f7;display:none;flex-direction:column;padding:calc(20px + env(safe-area-inset-top,0px)) 0 calc(18px + env(safe-area-inset-bottom,0px))}#rs{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}.sl{flex:0 0 100%;box-sizing:border-box;scroll-snap-align:center;padding:0 28px;display:flex;flex-direction:column;justify-content:center}.sl h3{font-size:32px;margin:6px 0 14px}.sl p{font-size:19px;line-height:1.4;margin:0;color:#d9d6cc}.sl .n{color:var(--dim)}#dt{display:flex;gap:8px;justify-content:center;margin:12px}#dt i{width:8px;height:8px;border-radius:50%;background:#ffffff33}#dt i.on{background:var(--tok)}#rc{margin:0 20px;padding:15px;border:0;border-radius:14px;background:var(--tok);color:#1a1400;font-size:18px;font-weight:700}#cb{width:100%;height:100%;perspective:none}#pk{display:block;touch-action:none}.row button{font-size:15px;padding:11px 4px}#mp{position:fixed;inset:0;background:radial-gradient(circle at 50% 45%,#161d2e,#07090e);display:none}#mc{touch-action:none;display:block}#mh{position:absolute;left:0;right:0;top:0;padding:calc(12px + env(safe-area-inset-top,0px)) 12px 0;display:flex;gap:8px;align-items:center}#ml{font-size:14px;flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#mz{position:absolute;right:12px;bottom:calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}#mz button{width:46px;height:46px;border-radius:50%;border:1px solid #ffffff2a;background:#ffffff14;font-size:22px}#ft{color:#c9c6bc;font-size:14px;margin-top:8px;font-style:italic}.cols{columns:2;column-gap:12px}.pc{break-inside:avoid;margin-bottom:12px;padding:12px;border-radius:20px;background:#ffffff0a}.pc .lh{margin-top:0;font-size:15px}
+html.pin{--bg:#f4efe9;--tx:#2b2623;--dim:#8c8178;--tok:#e60023;color-scheme:light}
+.pin body{font-family:Inter,system-ui,sans-serif;background:radial-gradient(circle at 12% 6%,#ffd9cf 0,transparent 38%),radial-gradient(circle at 92% 28%,#d8e7d3 0,transparent 36%),radial-gradient(circle at 18% 94%,#e7dcf0 0,transparent 42%),#f4efe9}
+.pin .pill{background:#fff;border:0;box-shadow:0 2px 12px #3b2f2a1a;color:#2b2623}
+.pin #tk{background:#fff;color:#e60023}.pin #hp,.pin #mx{background:#fff}
+.pin #stage{background:radial-gradient(circle at 50% 50%,#ffffffc0,transparent 62%)}
+.pin #sh{background:radial-gradient(ellipse,#3b2f2a50,transparent 70%)}
+.pin #go{background:#e60023;color:#fff;border-radius:999px;box-shadow:0 10px 24px #e6002345}
+.pin .row button{background:#fff;color:#2b2623;border:0;box-shadow:0 2px 12px #3b2f2a14;border-radius:999px}
+.pin #fc{color:#8c8178}.pin #fc b{color:#e60023!important}
+.pin #sign{background:#fff;border:0;box-shadow:0 20px 44px #3b2f2a2a,0 0 0 2px var(--rc);border-radius:28px}
+.pin #nm{color:#2b2623;font-family:Fraunces,Georgia,serif}.pin .hd{color:#8c8178}.pin #ft{color:#6b625b}.pin #bar{background:#efe9e2}
+.pin #wh{background:#2b262366;backdrop-filter:blur(6px)}
+.pin .wb{background:#fff;color:#2b2623;border-radius:28px;box-shadow:0 20px 50px #3b2f2a33}
+.pin .wb button{background:#f4efe9;color:#2b2623;border:2px solid var(--rc,transparent);border-radius:999px;padding:12px 16px}
+.pin #ru{background:#f4efe9}.pin .sl h3{font-family:Fraunces,Georgia,serif;color:#2b2623}.pin .sl p{color:#4a423d}
+.pin #rc{background:#e60023;color:#fff;border-radius:999px}.pin #dt i{background:#d9d0c7}.pin #dt i.on{background:#e60023}
+.pin #col{background:#f4efe9}.cols .chip{font-size:13px;padding:4px 8px}.pin .pc{background:#fff;box-shadow:0 4px 16px #3b2f2a14}
+.pin .chip{background:#f4efe9;border:0;color:#a79c92;border-radius:999px}.pin .chip.own{background:#fff;color:#2b2623;box-shadow:inset 0 0 0 2px var(--rc)}.pin .chip.fc{outline:2px solid #e60023}
+.pin #mp{background:radial-gradient(circle at 50% 45%,#fffaf4,#efe6dc)}.pin #mz button{background:#fff;color:#2b2623;border:0;box-shadow:0 2px 12px #3b2f2a1a}
+#bb{position:absolute;top:6px;right:12px;z-index:2;font-size:13px;padding:6px 12px;max-width:78%;overflow:hidden;text-overflow:ellipsis}#bb:disabled{opacity:.5}.ar{display:flex;gap:6px}.ar button{flex:1;text-align:center;padding-left:4px!important;padding-right:4px!important}#bn{font-weight:700;margin-top:6px}#wh{z-index:5}#sw{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:6;max-height:50vh;overflow:auto;display:none;background:#161b26;color:var(--tx);border-radius:24px;padding:16px;box-shadow:0 18px 40px #0008}#sw h3{margin:0 0 4px;font-size:24px;font-family:Fraunces,Georgia,serif}#sw .meta{color:var(--dim);font-size:14px;margin-bottom:6px}#sw button{padding:8px 14px;border-radius:999px;border:1px solid #ffffff2a;background:transparent;color:inherit;font:inherit;margin:2px 4px 2px 0}#sw button:disabled{opacity:.4}#sw [data-a=swx]{align-self:flex-start;padding:6px 12px}#sw button.pr1{background:var(--tok);color:#fff;border:0;padding:12px 18px;font-weight:700}.pin #sw{background:#fff;color:#2b2623;box-shadow:0 18px 44px #3b2f2a33}.pin #sw button{background:#f4efe9;border:0}.pin #sw button.pr1{background:#e60023;color:#fff}#mf{position:absolute;left:12px;right:12px;top:calc(64px + env(safe-area-inset-top,0px));display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}#mf button{padding:6px 12px;border-radius:999px;border:1px solid #ffffff2a;background:#ffffff14;color:inherit;font:inherit;font-size:13px;white-space:nowrap}#mf button.on{background:var(--tok);color:#fff;border:0}.pin #mf button{background:#fff;border:0;color:#2b2623;box-shadow:0 2px 8px #3b2f2a1a}.pin #mf button.on{background:#e60023;color:#fff}#hint{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);z-index:2;font-size:13px;padding:6px 14px;max-width:94%;text-align:center;white-space:normal;line-height:1.25}#hn{color:var(--dim);font-size:13px;margin-top:8px}@media(max-height:700px){#hn{display:none}#sign{padding:14px}}.rbar{height:12px;background:#00000022;border-radius:6px;overflow:hidden;margin:3px 0 8px}.rbar i{display:block;height:100%;width:0;background:var(--tok)}@media(prefers-reduced-motion:reduce){#sign.in{animation:none}}
+</style></head>
+<body>
+<div class="ui" id="top"><span class="pill" id="cnt"></span><button class="pill" id="hp">Правила</button><span class="pill" id="tk"></span></div>
+<div id="stage"><button class="pill" id="bb">Ставка на линию</button><button class="pill" id="hint"></button>
+ <div id="cb"><canvas id="pk"></canvas><i id="sh"></i></div>
+ <div id="sign"><div class="hd"><span class="bd" id="bd"></span><span id="ln"></span></div><h2 id="nm"></h2><div id="rr"></div><div id="bar"><i id="bi"></i></div><div id="bn"></div><div id="nw"></div><div id="ft"></div><div id="hn"></div></div>
+</div>
+<div class="ui" id="bot"><div id="fc"></div><button id="go">Крутить жетон</button>
+<div class="row"><button id="bc">Коллекция</button><button id="bm">Карта</button><button id="bw">Выбор</button><button id="bk">Меню</button></div></div><div id="wh"></div><div id="sw"></div><div id="mp"><canvas id="mc"></canvas><div id="mh"><button class="pill" id="mx">Закрыть</button><span class="pill" id="ml"></span></div><div id="mf"></div><div id="mz"><button id="m1">+</button><button id="m2">−</button></div></div><div id="ru"><div id="rs"></div><div id="dt"></div><button id="rc">Понятно, играть</button></div>
+<div id="col"><button class="pill" id="cl" style="position:sticky;top:0">Закрыть</button><div id="cl2"></div></div>
+<script>
+const D=[
+['1','Сокольническая','#e2231a','Бульвар Рокоссовского|Черкизовская|Преображенская площадь|Сокольники|Красносельская|Комсомольская|Красные ворота|Чистые пруды|Лубянка|Охотный ряд|Библиотека имени Ленина|Кропоткинская|Парк культуры|Фрунзенская|Спортивная|Воробьёвы горы|Университет|Проспект Вернадского|Юго-Западная|Тропарёво|Румянцево|Саларьево|Филатов Луг|Прокшино|Ольховая|Коммунарка'],
+['2','Замоскворецкая','#2dac49','Ховрино|Беломорская|Речной вокзал|Водный стадион|Войковская|Сокол|Аэропорт|Динамо|Белорусская|Маяковская|Тверская|Театральная|Новокузнецкая|Павелецкая|Автозаводская|Технопарк|Коломенская|Каширская|Кантемировская|Царицыно|Орехово|Домодедовская|Красногвардейская|Алма-Атинская'],
+['3','Арбатско-Покровская','#1c69b3','Щёлковская|Первомайская|Измайловская|Партизанская|Семёновская|Электрозаводская|Бауманская|Курская|Площадь Революции|Арбатская|Смоленская|Киевская|Парк Победы|Славянский бульвар|Кунцевская|Молодёжная|Крылатское|Строгино|Мякинино|Волоколамская|Митино|Пятницкое шоссе'],
+['4','Филёвская','#1ab1e9','Пионерская|Филёвский парк|Багратионовская|Фили|Кутузовская|Студенческая|Киевская|Смоленская|Арбатская|Александровский сад|Выставочная|Международная'],
+['5','Кольцевая','#8d5b2d','Белорусская|Краснопресненская|Киевская|Парк культуры|Октябрьская|Добрынинская|Павелецкая|Таганская|Курская|Комсомольская|Проспект Мира|Новослободская'],
+['6','Калужско-Рижская','#f58220','Медведково|Бабушкинская|Свиблово|Ботанический сад|ВДНХ|Алексеевская|Рижская|Проспект Мира|Сухаревская|Тургеневская|Китай-город|Третьяковская|Октябрьская|Шаболовская|Ленинский проспект|Академическая|Профсоюзная|Новые Черёмушки|Калужская|Беляево|Коньково|Тёплый Стан|Ясенево|Новоясеневская'],
+['7','Таганско-Краснопресненская','#8e479a','Планерная|Сходненская|Тушинская|Спартак|Щукинская|Октябрьское Поле|Полежаевская|Беговая|Улица 1905 года|Баррикадная|Пушкинская|Кузнецкий Мост|Китай-город|Таганская|Пролетарская|Волгоградский проспект|Текстильщики|Кузьминки|Рязанский проспект|Выхино|Лермонтовский проспект|Жулебино|Котельники'],
+['8','Калининская и Солнцевская','#ffd803','Новокосино|Новогиреево|Перово|Шоссе Энтузиастов|Авиамоторная|Площадь Ильича|Марксистская|Третьяковская|Деловой центр|Парк Победы|Минская|Ломоносовский проспект|Раменки|Мичуринский проспект|Озёрная|Говорово|Солнцево|Боровское шоссе|Новопеределкино|Рассказовка|Пыхтино|Аэропорт Внуково'],
+['9','Серпуховско-Тимирязевская','#a1a2a3','Алтуфьево|Бибирево|Отрадное|Владыкино|Петровско-Разумовская|Тимирязевская|Дмитровская|Савёловская|Менделеевская|Цветной бульвар|Чеховская|Боровицкая|Полянка|Серпуховская|Тульская|Нагатинская|Нагорная|Нахимовский проспект|Севастопольская|Чертановская|Южная|Пражская|Улица Академика Янгеля|Аннино|Бульвар Дмитрия Донского'],
+['10','Люблинско-Дмитровская','#a7c21f','Физтех|Лианозово|Яхромская|Селигерская|Верхние Лихоборы|Окружная|Петровско-Разумовская|Фонвизинская|Бутырская|Марьина Роща|Достоевская|Трубная|Сретенский бульвар|Чкаловская|Римская|Крестьянская застава|Дубровка|Кожуховская|Печатники|Волжская|Люблино|Братиславская|Марьино|Борисово|Шипиловская|Зябликово|Красногвардейская'],
+['11','Большая кольцевая','#82c8c0','Савёловская|Марьина Роща|Рижская|Сокольники|Электрозаводская|Лефортово|Авиамоторная|Нижегородская|Текстильщики|Печатники|Нагатинский Затон|Кленовый бульвар|Каширская|Варшавская|Каховская|Зюзино|Воронцовская|Новаторская|Проспект Вернадского|Мичуринский проспект|Аминьевская|Давыдково|Кунцевская|Терехово|Мнёвники|Народное Ополчение|Хорошёвская|ЦСКА|Петровский парк|Деловой центр|Шелепиха'],
+['12','Бутовская','#b7bfdb','Битцевский парк|Лесопарковая|Улица Старокачаловская|Улица Скобелевская|Бульвар Адмирала Ушакова|Улица Горчакова|Бунинская аллея|Бульвар Дмитрия Донского'],
+['14','МЦК','#ef3340','Окружная|Владыкино|Ботанический сад|Ростокино|Белокаменная|Бульвар Рокоссовского|Локомотив|Измайлово|Соколиная Гора|Шоссе Энтузиастов|Андроновка|Нижегородская|Новохохловская|Угрешская|Дубровка|Автозаводская|ЗИЛ|Верхние Котлы|Крымская|Площадь Гагарина|Лужники|Кутузовская|Деловой центр|Шелепиха|Хорошёво|Зорге|Панфиловская|Стрешнево|Балтийская|Коптево|Лихоборы'],
+['15','Некрасовская','#e07fb3','Некрасовка|Лухмановская|Улица Дмитриевского|Косино|Юго-Восточная|Окская|Стахановская|Нижегородская'],
+['D1','МЦД-1','#f9a31b','Лобня|Шереметьевская|Хлебниково|Водники|Долгопрудная|Новодачная|Марк|Лианозово|Бескудниково|Дегунино|Окружная|Тимирязевская|Дмитровская|Савёловская|Белорусская|Беговая|Тестовская|Фили|Славянский бульвар|Кунцевская|Рабочий Посёлок|Сетунь|Немчиновка|Сколково|Баковка|Одинцово'],
+['D2','МЦД-2','#e8478a','Нахабино|Аникеевка|Опалиха|Красногорская|Павшино|Пенягино|Волоколамская|Трикотажная|Стрешнево|Красный Балтиец|Гражданская|Дмитровская|Марьина Роща|Рижская|Площадь трёх вокзалов|Курская|Москва-Товарная|Калитники|Текстильщики|Печатники|Люблино|Депо|Перерва|Курьяново|Москворечье|Царицыно|Покровское|Красный Строитель|Битца|Бутово|Щербинка|Остафьево|Силикатная|Подольск'],
+['D3','МЦД-3','#f05a28','Зеленоград-Крюково|Фирсановская|Сходня|Подрезково|Новоподрезково|Молжаниново|Химки|Левобережная|Ховрино|Грачёвская|Моссельмаш|Лихоборы|Петровско-Разумовская|Останкино|Рижская|Митьково|Электрозаводская|Сортировочная|Авиамоторная|Андроновка|Перово|Плющево|Вешняки|Выхино|Косино|Ухтомская|Люберцы|Панки|Томилино|Красково|Малаховка|Удельная|Быково|Ильинская|Отдых|Кратово|Есенинская|Фабричная|Раменское|Ипподром'],
+['D4','МЦД-4','#24b393','Железнодорожная|Ольгино|Кучино|Салтыковская|Никольское|Реутово|Новогиреево|Кусково|Чухлинка|Нижегородская|Серп и Молот|Курская|Площадь трёх вокзалов|Марьина Роща|Савёловская|Белорусская|Тестовская|Деловой центр|Кутузовская|Матвеевская|Аминьевская|Очаково|Мещерская|Солнечная|Ново-Переделкино|Переделкино|Мичуринец|Внуково|Лесной Городок|Толстопальцево|Кокошкино|Санино|Крёкшино|Победа|Апрелевка']];
+const M=[],cnt={};
+D.forEach(d=>d[3].split('|').forEach((n,i)=>{M.push({id:d[0]+'_'+i,n,l:d});cnt[n]=(cnt[n]||0)+1}));
+const EP=new Set('Маяковская,Площадь Революции,Новослободская,Комсомольская,Киевская,Курская,Белорусская,Автозаводская,Кропоткинская,Таганская,Электрозаводская,Бауманская,Арбатская,Деловой центр,Александровский сад,Университет'.split(','));
+const LG=new Set(['Парк Победы','Воробьёвы горы']);
+M.forEach(s=>s.r=LG.has(s.n)?3:EP.has(s.n)?2:cnt[s.n]>1?1:0);
+const RC=['#9aa3b5','#3aa0ff','#b04dff','#ffb02e'],RN=['Обычная','Редкая','Эпик','Легенда'];
+const EN=['1935–38','1939–58','1959–79','1980–99','2000–15','с 2016'],BASE=[10,25,60,150],EM=[.7,.8,1,1.2,1.4,1.6];
+const EZ={'1':'543'+'1'.repeat(11)+'2'+'3333'+'5'+'666666','2':'66333'+'1111111'+'222'+'5'+'33'+'44444'+'5','3':'333'+'22222'+'1'+'222'+'4'+'55'+'33'+'4'+'5555','4':'323321111155','5':'2'.repeat(12),'6':'3333'+'2222'+'3'.repeat(13)+'444','7':'333'+'5'+'3'.repeat(16)+'555','8':'5'+'3'.repeat(7)+'6'.repeat(14),'9':'4'.repeat(23)+'55','10':'6'.repeat(10)+'555'+'4'.repeat(13)+'5','12':'5'.repeat(8)};
+const BY={};M.forEach(s=>{BY[s.id]=s;s.e=+((EZ[s.l[0]]||'')[+s.id.split('_')[1]])||6});
+const cost=s=>Math.round(BASE[s.r]*EM[s.e-1]);
+const PRICE=1000,DUPP=600,WSELL=8000,DAILY=50000,ERAB=30000;const KEY='metro3d6';let S={ver:2,n:0,seen:0,t:500000,fr:{},dn:{},dup:0,tk:0,focus:'',pity:0,daily:'',sk:0,skd:'',q:{d:'',p:{spin:0,open:0,quiz:0},c:{}},qz:{d:'',n:0},ev:'',cl:{},tr:[],tc:Date.now(),snd:1,theme:'pin',dbl:null,pt:0,ach:{},ct:{qc:0,bw:0,tw:0,rw:0,jp:0,dm:0,lm:0,sk:0},lv:{},dc:{},bl:{d:'',net:0},brk:0,bet:null,betA:5000,lb:null,st:{nt:0,rt:0,lk:0}};
+try{const x=JSON.parse(localStorage.getItem(KEY));if(x){if(!x.ver){x.t=(x.t||0)*100;if(x.bl&&x.bl.net)x.bl.net*=100}S=Object.assign(S,x)}}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id);
+const fm=t=>String(t).replace(/(\d{4,})(?= ₽)/g,m=>m.replace(/\B(?=(\d{3})+(?!\d))/g,'\u00a0'));
+const nd=()=>Object.keys(S.dn).length;
+const pct=e=>{const a=M.filter(s=>s.e===e);return a.filter(s=>S.dn[s.id]).length/a.length};
+const open=e=>e<=1||pct(e-1)>=.7;
+const oe=()=>[1,2,3,4,5,6].filter(open).length;
+const M_SVG='<svg viewBox="150 270 890 610"><polygon fill="#fff" points="167,862 167,785 228,785 428,282 595,575 762,282 960,785 1020,785 1020,862 720,862 685,700 595,865 505,700 470,862"/></svg>';
+function addFr(s,n){S.fr[s.id]=Math.min(cost(s),(S.fr[s.id]||0)+n);if(S.fr[s.id]>=cost(s))S.dn[s.id]=1}
+const night=()=>new Date().getHours()<5;const RH=[8,13,18,22],rush=()=>{const d=new Date();return RH.includes(d.getHours())&&d.getMinutes()<20};
+const luckMul=()=>{let r=Math.random()*100;for(const [m,w] of [[2,38],[3,25],[5,17],[10,10],[20,7],[50,3]])if((r-=w)<0)return m;return 2};
+function pick(lucky,nf){const pl=M.filter(s=>open(s.e)),f=BY[S.focus];
+ if(lucky){let c=pl.filter(s=>s.r>=2&&!S.dn[s.id]);if(!c.length)c=pl.filter(s=>s.r>=2);if(!c.length)c=pl;return c[Math.floor(Math.random()*c.length)]}
+ if(!nf&&f&&!S.dn[f.id]&&Math.random()<.5)return f;
+ const p=Math.random();let r;
+ if(S.pity>=29)r=Math.random()<.2?3:2;else r=(rush()||night())?(p<.5?0:p<.8?1:p<.94?2:3):(p<.6?0:p<.88?1:p<.97?2:3);
+ let c=pl.filter(s=>s.r===r);if(!c.length)c=pl;return c[Math.floor(Math.random()*c.length)]}
+function drop(m,lucky,nf){m=m||1;let s=pick(lucky,nf);ensureDay();S.q.p.spin++;if(night())S.st.nt++;if(rush())S.st.rt++;if(lucky)S.st.lk++;const tut=S.n<5&&!lucky,lm=m;
+ if(tut){s=M.filter(x=>x.e===1&&x.r===0&&!S.dn[x.id])[0]||s;m=Math.max(m,3)}S.n++;
+ const rs=rush();if(rs)m*=2;
+ const o=oe();S.pity=s.r>=2?0:S.pity+1;
+ const tag=[tut?'бонус новичку ×3':'',lucky?'УДАЧА ×'+lm:'',rs?'час пик ×2':'',night()?'ночной поезд':''].filter(Boolean);
+ if(S.dn[s.id]){S.dc[s.id]=(S.dc[s.id]||0)+m;S.pt=(S.pt||0)+m;tag.push('запчасть +'+m);if((S.lv[s.id]||1)>=5){S.dup+=m;while(S.dup>=10){S.dup-=10;S.tk++}}return{s,mode:'dup',m,note:tag.join(' · ')}}
+ const pre=pendT();addFr(s,m);if(S.dn[s.id]){S.q.p.open++;S.t+=pre;S.tc=Date.now();onOpen(s)}const up=oe()>o;if(up)S.t+=ERAB;if(up)tag.push('открыта эпоха '+oe()+', +'+ERAB+' ₽');
+ return{s,m,mode:S.dn[s.id]?'full':'frag',note:tag.join(' · ')}}
+let busy=false;
+function ui(){$('tk').textContent=fm(S.t+' ₽');$('cnt').textContent='Станций: '+nd()+'/'+M.length;
+ const f=BY[S.focus],d=new Date(),nr=RH.map(h=>{const t=new Date(d);t.setHours(h,0,0,0);if(t<=d)t.setDate(t.getDate()+1);return t}).sort((a,b)=>a-b)[0];
+ $('fc').innerHTML=(f&&!S.dn[f.id]?'В работе: '+f.n+' '+(S.fr[f.id]||0)+'/'+cost(f):'Выбери станцию в работе в коллекции')+' · Дубли '+S.dup+'/10<br>'+(night()?'Ночной поезд: больше редких · ':'')+(rush()?'<b style="color:var(--tok)">Час пик! ×2 фрагментов, ещё '+(20-d.getMinutes())+' мин</b>':'Час пик в '+nr.getHours()+':00')+' · Удача через '+(50-S.n%50);
+ $('bb').textContent=S.bet?'Ставка '+S.bet.a+' ₽ · '+T[S.bet.i].n+' · ×'+fx(pm(odds(T[S.bet.i].f))):'Ставка на линию';$('bb').disabled=busy;$('go').disabled=S.t<PRICE||busy;$('go').textContent=S.bet?'Крутить + ставка · '+(PRICE+S.bet.a)+' ₽':'Крутить жетон · '+PRICE+' ₽';$('bw').textContent='Выбор'+(S.tk?' ×'+S.tk:'');$('bw').disabled=S.tk<1;$('bb').textContent=fm($('bb').textContent);$('bk').textContent=hasClaim()?'Меню ●':'Меню';$('go').textContent=fm($('go').textContent);hintCur=hintInfo();$('hint').textContent=hintCur.t;$('hint').style.display=$('sign').style.display==='block'?'none':''}
+const light=h=>{const n=parseInt(h.slice(1),16);return ((n>>16)*299+((n>>8)&255)*587+(n&255)*114)/1000>150};
+function showSign(s,mode,note){const g=$('sign'),c=cost(s),f=S.fr[s.id]||0;g.className='r'+s.r;g.style.removeProperty('--rc');if((note||'').includes('УДАЧА'))g.style.setProperty('--rc','#f2b705');g.style.display='block';
+ $('bd').textContent=s.l[0];$('bd').style.background=s.l[2];$('bd').style.color=light(s.l[2])?'#111':'#fff';
+ $('ln').textContent=s.l[1]+' · эпоха '+s.e;$('nm').textContent=s.n;$('rr').textContent=RN[s.r];
+ const lv=S.lv[s.id]||1,dp=lv>=5?S.dup/10:Math.min(1,(S.dc[s.id]||0)/DC[lv-1]);$('bi').style.width=Math.round((mode==='dup'?dp:mode==='full'?1:f/c)*100)+'%';
+ $('nw').textContent=(mode==='full'?'Станция открыта!':mode==='dup'?(lv>=5?'Дубликат: '+S.dup+'/10 до выбора фрагментов':'Дубликат для улучшения станции: '+(S.dc[s.id]||0)+'/'+DC[lv-1]):'Фрагмент '+f+'/'+c)+(note?' · '+note:'');
+ const bn=window.BN;$('bn').textContent=bn?bn.t:'';$('bn').style.color=bn&&bn.w?'#1a9a4a':'#d32f2f';window.BN=null;$('nw').textContent=fm($('nw').textContent);$('bn').textContent=fm($('bn').textContent);$('ft').textContent=mode==='full'&&s.r>=2?(FACTS[s.n]||'Эпоха '+EN[s.e-1]+'. '+s.l[1]+'.'):'';$('hn').textContent=hintInfo().t;$('hn').style.display=innerHeight<700?'none':'';$('cb').style.display='none';void g.offsetWidth;g.classList.add('in')}
+const cv=$('pk'),cx=cv.getContext('2d');
+const PTS=[[167,862],[167,785],[228,785],[428,282],[595,575],[762,282],[960,785],[1020,785],[1020,862],[720,862],[685,700],[595,865],[505,700],[470,862]];
+let n=0,img,LON,ROW,SHD,SPC,AL,ang=0,spinning=0,spinT=0;
+const TEX=(()=>{const c=document.createElement('canvas');c.width=2048;c.height=1024;const g=c.getContext('2d'),bg=g.createLinearGradient(0,0,0,1024);
+ bg.addColorStop(0,'#e8261c');bg.addColorStop(.5,'#f3392d');bg.addColorStop(1,'#e8261c');g.fillStyle=bg;g.fillRect(0,0,2048,1024);
+ const n=50,GA=2.399963,kk=.103;
+ for(let i=0;i<n;i++){const lat=Math.asin(1-2*(i+.5)/n),lon=(i*GA)%(2*Math.PI);if(Math.abs(lat)>1.25)continue;const x=lon/(2*Math.PI)*2048,y=(.5-lat/Math.PI)*1024,sx=Math.min(3.2,1/Math.cos(lat));
+  for(const off of [-2048,0,2048])for(const [dx,dy,col] of [[2,3,'#a50f18'],[0,0,'#fff']]){g.save();g.translate(x+off+dx,y+dy);g.scale(sx,1);g.fillStyle=col;g.beginPath();PTS.forEach((q,j)=>{const X=(q[0]-593)*kk,Y=(q[1]-573)*kk;j?g.lineTo(X,Y):g.moveTo(X,Y)});g.closePath();g.fill();g.restore()}}
+ return g.getImageData(0,0,2048,1024).data})();
+function build(){const dpr=Math.min(devicePixelRatio||1,2),d=Math.min(innerWidth*.52,innerHeight*.34,220);n=Math.round(d*dpr);cv.width=cv.height=n;cv.style.width=cv.style.height=d+'px';
+ img=cx.createImageData(n,n);const N=n*n;LON=new Float32Array(N);ROW=new Uint16Array(N);SHD=new Float32Array(N);SPC=new Float32Array(N);AL=new Uint8ClampedArray(N);
+ const t=-16*Math.PI/180,ct=Math.cos(t),st=Math.sin(t);let L=[-.42,.55,.72];const ll=Math.hypot(...L);L=L.map(v=>v/ll);let Hh=[L[0],L[1],L[2]+1];const hl=Math.hypot(...Hh);Hh=Hh.map(v=>v/hl);
+ for(let y=0;y<n;y++)for(let x=0;x<n;x++){const X=(x+.5)/n*2-1,Y=1-(y+.5)/n*2,r2=X*X+Y*Y,i=y*n+x,r=Math.sqrt(r2),a=Math.max(0,Math.min(1,(1-r)*n/2+.5));if(!a)continue;AL[i]=Math.round(a*255);
+  const Z=Math.sqrt(Math.max(0,1-r2)),df=Math.max(0,X*L[0]+Y*L[1]+Z*L[2]),sp=Math.pow(Math.max(0,X*Hh[0]+Y*Hh[1]+Z*Hh[2]),55),fr=Math.pow(1-Z,2.2);
+  SHD[i]=(.3+.85*df)*(1-.45*fr);SPC[i]=fr*18;
+  const qy=Y*ct+Z*st,qz=-Y*st+Z*ct;LON[i]=Math.atan2(X,qz);ROW[i]=Math.max(0,Math.min(1023,Math.floor((.5-Math.asin(Math.max(-1,Math.min(1,qy)))/Math.PI)*1024)))}}
+function render(){const d=img.data,K=1/(2*Math.PI);for(let i=0,N=n*n;i<N;i++){const o=i*4,al=AL[i];if(!al){d[o+3]=0;continue}let u=(LON[i]+ang)*K+.5;u-=Math.floor(u);const t=(ROW[i]*2048+((u*2048)|0))*4,s=SHD[i],p=SPC[i];d[o]=TEX[t]*s+p;d[o+1]=TEX[t+1]*s+p;d[o+2]=TEX[t+2]*s+p;d[o+3]=al}cx.putImageData(img,0,0)}
+let last=performance.now();
+function loop(t){requestAnimationFrame(loop);const dt=Math.min((t-last)/1000,.05);last=t;let w=.9;
+ if(spinning){spinT+=dt;w=.9+30*Math.sin(Math.PI*Math.min(1,spinT/1.5))}ang+=w*dt;if($('cb').style.display!=='none')render()}
+function spin(){if(busy||S.t<PRICE)return;S.t-=PRICE;busy=true;const lucky=(S.n+1)%50===0,lm=lucky?luckMul():1;let bet=null,bmsg='';if(S.bet){if(lucky)bmsg='ставка перенесена на следующий оборот («Удача»)';else{const bs=betState(),p=odds(T[S.bet.i].f);if(bs)bmsg='ставка отменена: '+bs;else if(S.t<S.bet.a)bmsg='ставка отменена: не хватило рублей';else if(p<.01)bmsg='ставка отменена: сейчас нет шансов на эту линию';else{bet={a:S.bet.a,i:S.bet.i,pm:pm(p)};S.t-=bet.a}}}if(!lucky)S.bet=null;sfx.spin();if(lucky)cv.style.filter='drop-shadow(0 0 26px #f2b705)';$('sign').style.display='none';$('cb').style.display='';spinning=1;spinT=0;save();ui();
+ const done=()=>{spinning=0;cv.style.filter='';const r=drop(lm,lucky,!!bet);if(lucky)ctx('lm',lm);window.BN=bmsg?{t:bmsg,w:0}:null;if(bet){qp('game');let net;if(T[bet.i].f(r.s)){cti('bw');const pay=Math.round(bet.a*bet.pm);S.t+=pay;net=bet.a-pay;window.BN={t:'Ставка выиграла: +'+pay+' ₽ (×'+fx(bet.pm)+')',w:1}}else{net=bet.a;window.BN={t:'Ставка не зашла: −'+bet.a+' ₽ (выпала «'+r.s.l[1]+'»)',w:0}}S.bl.net+=net}if(r.mode!=='dup')sfx.win(r.s.r);if(r.mode==='full'&&r.s.r>=2)sfx.door(r.s.n);busy=false;save();showSign(r.s,r.mode,r.note);ui()};
+ if(matchMedia('(prefers-reduced-motion:reduce)').matches){done();return}
+ cv.animate([{transform:'translateY(0) scale(1)'},{transform:'translateY(-28px) scale(1.08)',offset:.5},{transform:'translateY(0) scale(1)'}],{duration:1500,easing:'ease-in-out'}).onfinish=done}
+addEventListener('resize',build);build();requestAnimationFrame(loop);
+const today=()=>new Date().toDateString(),yest=()=>new Date(Date.now()-864e5).toDateString();
+const wb=h=>{$('wh').innerHTML=fm('<div class="wb" style="max-height:88vh;overflow:auto">'+h+'</div>');$('wh').style.display='flex'};
+const bt=(a,t,i,d)=>'<button data-a="'+a+'"'+(i!=null?' data-i="'+i+'"':'')+(d?' disabled':'')+'>'+t+'</button>';
+const nt=t=>'<div style="color:var(--dim);font-size:14px">'+t+'</div>';
+function ensureDay(){const d=today();if(S.q.d!==d)S.q={d,p:{spin:0,open:0,quiz:0},c:{}};if(S.qz.d!==d)S.qz={d,n:0}}
+const FACTS={'Парк Победы':'Самая глубокая станция Москвы, около 84 метров, с одними из самых длинных эскалаторов.','Воробьёвы горы':'Станция расположена прямо на метромосту над Москвой-рекой.','Маяковская':'Открыта в 1938 году, один из символов сталинского метро, потолок украшен мозаикой.','Площадь Революции':'Знаменита скульптурами. По традиции пассажиры трут нос собаке на удачу.','Комсомольская':'Кольцевая станция 1952 года в стиле барокко с большими люстрами и мозаикой.','Новослободская':'Знаменита витражами в металлических рамах.'};
+const QS=[['spin',20,'Сделай 20 оборотов',10000],['open',1,'Открой 1 станцию',15000],['quiz',3,'Ответь верно на 3 вопроса',10000],['spin',60,'Сделай 60 оборотов',30000],['open',3,'Открой 3 станции',40000],['adj',1,'Открой станцию рядом с уже открытой на той же линии',20000],['up',1,'Улучши станцию или поезд',25000],['game',1,'Сыграй в игру на рубли',10000],['col',1,'Забери доход в депо',10000],['map',1,'Загляни на карту',5000]];
+const SETS=[{n:'Кольцевая',f:x=>x.l[0]==='5',r:30000},{n:'МЦК',f:x=>x.l[0]==='14',r:70000},{n:'БКЛ',f:x=>x.l[0]==='11',r:70000},{n:'Эпоха 1935–38',f:x=>x.e===1,r:50000},{n:'Станции на «К»',f:x=>x.n[0]==='К',r:120000},{n:'МЦД-1…4',f:x=>x.l[0][0]==='D',r:250000},{n:'Все эпики и легенды',f:x=>x.r>=2,r:300000}];
+const TR=[['81-717',40000,120],['Ока 81-720',120000,400],['Москва 81-760',350000,1200],['Ретро «Ленинец»',900000,3500],['Русич 81-725',0,2000,60],['«Призрак» (ночной)',0,6000,200]];
+const DC=[2,4,8,15],RC2=[3000,8000,20000,50000],SB=[3,8,18,40,90],RM=[1,1.5,2.5,4],stInc=()=>M.reduce((a,x)=>a+(S.dn[x.id]?SB[(S.lv[x.id]||1)-1]*RM[x.r]:0),0),inc=()=>S.tr.reduce((a,t)=>a+tinc(t),0)+stInc(),pendT=()=>Math.floor(Math.min(capH(),(Date.now()-S.tc)/36e5)*inc());
+const RK=[[0,'Новичок'],[20,'Пассажир'],[60,'Знаток'],[150,'Диспетчер'],[300,'Начальник станции'],[430,'Легенда метро']],rank=()=>RK.filter(r=>nd()>=r[0]).pop()[1];
+const EVS=[['Вагон набит. Что делаешь?','Пропустить поезд (+4000 ₽)','Протиснуться (50%: +12000 ₽, иначе −3000 ₽)'],['На сиденье забытый кошелёк.','Отдать на станцию (+4000 ₽)','Оставить себе (50%: +12000 ₽, иначе −3000 ₽)'],['Поезд встал в тоннеле.','Подождать (+4000 ₽)','Пойти другим маршрутом (50%: +12000 ₽, иначе −3000 ₽)']];
+const applyTheme=()=>document.documentElement.classList.toggle('pin',S.theme==='pin'),PIN=()=>S.theme==='pin';applyTheme();
+const T=[{n:'Радиальные линии',f:x=>!['5','11','14'].includes(x.l[0])&&x.l[0][0]!=='D'},{n:'Кольца: Кольцевая, БКЛ, МЦК',f:x=>['5','11','14'].includes(x.l[0])},{n:'МЦД (D1–D4)',f:x=>x.l[0][0]==='D'},...D.map(d=>({n:d[1],f:x=>x.l===d}))];
+const BA=[1000,5000,10000,20000],LIM=100000,pm=p=>Math.min(50,Math.max(1.05,.9/p)),fx=v=>(Math.round(v*10)/10).toString().replace('.',',');
+const rw=()=>S.pity>=29?[0,0,.8,.2]:(rush()||night())?[.5,.3,.14,.06]:[.6,.28,.09,.03];
+function odds(f){const pl=M.filter(x=>open(x.e)),w=rw();let p=0;for(let r=0;r<4;r++){if(!w[r])continue;let c=pl.filter(x=>x.r===r);if(!c.length)c=pl;p+=w[r]*c.filter(f).length/c.length}return p}
+function betState(){if(!S.bl||S.bl.d!==today())S.bl={d:today(),net:0};if(S.brk>Date.now())return'Ставки отключены: ты взял перерыв до '+new Date(S.brk).toLocaleString([],{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'.';if(S.n<5)return'Ставки откроются после 5 оборотов.';if(S.bl.net>=LIM)return'Лимит потерь на сегодня исчерпан ('+LIM+' ₽). Приходи завтра.';return''}
+function openBet(){const bs=betState(),a=S.betA||5000;
+ wb('<b>Ставка на линию</b>'+nt('Угадай, на какой линии окажется выпавшая станция. Ставка действует один оборот (на оборот «Удача» не работает), «станция в работе» на этот оборот не влияет. Рубли виртуальные: их нельзя купить или вывести. 18+. Потери за день до '+LIM+' ₽.')+(bs?nt(bs):'<b>Шаг 1. Сумма: '+a+' ₽</b><div class="ar">'+BA.map((v,i)=>bt('ba',(v===a?'✓ ':'')+v+' ₽',i)).join('')+'</div><b>Шаг 2. Выбери, на что ставить</b>'+nt('Ставка делается только когда ты нажмёшь на линию. Сумма сама по себе ничего не ставит.')+T.map((t,i)=>{const p=odds(t.f);return(p<.03||p>.7)?'':bt('bs','Поставить '+a+' ₽ на: '+t.n+' · шанс '+Math.round(p*100)+'% · ×'+fx(pm(p)),i)}).join(''))+(S.bet?bt('bx','Убрать ставку'):'')+(S.lb&&!bs&&!S.bet?bt('bq','Повторить: '+S.lb.a+' ₽ на '+T[S.lb.i].n):'')+bt('brk','Перерыв на 24 часа')+bt('menu','← Назад'))}
+$('bb').onclick=openBet;let PB=null;
+let hintCur=null;
+const plu=n=>n+' '+(n%10===1&&n%100!==11?'станция':([2,3,4].includes(n%10)&&![12,13,14].includes(n%100))?'станции':'станций');
+function hintInfo(){const c=[];
+ LINES.forEach((ss,li)=>{const m=ss.filter(x=>!S.dn[x.id]);if(m.length&&m.length<=6&&ss.some(x=>S.dn[x.id])&&m.every(x=>open(x.e)))c.push({k:m.length,t:'До закрытия линии «'+D[li][1]+'» осталось '+plu(m.length),f:'L:'+D[li][0]})});
+ SETS.forEach((q,i)=>{if(S.cl[i])return;const a=M.filter(q.f),m=a.filter(x=>!S.dn[x.id]);if(m.length&&m.length<=6&&m.length<a.length&&m.every(x=>open(x.e)))c.push({k:m.length+.5,t:'До набора «'+q.n+'» осталось '+plu(m.length),f:null})});
+ for(let e=2;e<=6;e++)if(!open(e)){const pv=M.filter(x=>x.e===e-1),nd2=Math.ceil(pv.length*.7)-pv.filter(x=>S.dn[x.id]).length;if(nd2>0&&nd2<=8)c.push({k:nd2+.7,t:'До эпохи '+e+' ('+EN[e-1]+') ещё '+plu(nd2),f:null});break}
+ c.sort((a,b)=>a.k-b.k);const f=BY[S.focus];return c[0]||(f&&!S.dn[f.id]?{t:'До «'+f.n+'»: '+(cost(f)-(S.fr[f.id]||0))+' фрагментов',f:null}:{t:'Открой первую станцию: выбери её в коллекции',f:null})}
+$('hint').onclick=()=>{F=hintCur&&hintCur.f?hintCur.f:'all';mopen()};
+const TKP=[5000,20000,50000],RT=[['81-717',.4],['Ока',.3],['Москва',.2],['Ленинец',.1]],RSA=[5000,10000,20000],DBS=[1000,5000,10000];let RSI=0;
+const rmu=p=>Math.round(.9/p*10)/10;
+function tkTier(d){const a=[...d].map(Number);if(new Set(d).size===1||d==='123456'||d==='654321')return['Джекпот',500];if(d===[...d].reverse().join(''))return['Зеркальный',50];if(d.endsWith('777'))return['Три семёрки',50];if(d.slice(0,3)===d.slice(3))return['Повтор',30];if(a[0]+a[1]+a[2]===a[3]+a[4]+a[5])return['Счастливый',14.4];return['',0]}
+function openGames(){const bs=betState();wb('<b>Игры на рубли</b>'+nt('Рубли виртуальные: их нельзя купить или вывести. 18+. Возврат около 90%. Потери сегодня: '+Math.max(0,S.bl.net)+' из '+LIM+' ₽.')+(bs?nt(bs):'')+(S.dbl?nt('У тебя незаконченная игра «Удвоить или ничего».'):'')+bt('gtk','Счастливый билет',null,!!bs)+bt('grc','Скачки поездов',null,!!bs)+bt('gdb','Удвоить или ничего')+bt('bet','Ставка на линию')+bt('menu','← Назад'))}
+function openTicket(){const bs=betState();wb('<b>Счастливый билет</b>'+nt('Шестизначный билет открывается по цифре. Выигрыш: счастливый (суммы половин равны) ×14,4 · три семёрки в конце ×50 · зеркальный ×50 · повтор вроде 123123 ×30 · все цифры одинаковые или 123456 ×500.')+(bs?nt(bs):TKP.map((v,i)=>bt('gtb','Купить билет за '+v+' ₽',i,S.t<v)).join(''))+bt('games','← Назад'))}
+function openRace(){const bs=betState(),a=RSA[RSI];wb('<b>Скачки поездов</b>'+nt('Шанс и выигрыш указаны у каждого поезда.')+(bs?nt(bs):'<b>Шаг 1. Ставка: '+a+' ₽</b><div class="ar">'+RSA.map((v,i)=>bt('grs',(i===RSI?'✓ ':'')+v+' ₽',i)).join('')+'</div><b>Шаг 2. Выбери поезд</b>'+RT.map((t,i)=>bt('grt','Поставить '+a+' ₽ на: '+t[0]+' · шанс '+Math.round(t[1]*100)+'% · ×'+fx(rmu(t[1])),i,S.t<a)).join(''))+bt('games','← Назад'))}
+function openDbl(msg){const bs=betState();
+ if(S.dbl){const v=S.dbl.a*S.dbl.m;wb('<b>Удвоить или ничего</b>'+(msg?'<div>'+msg+'</div>':'')+'<div>Сейчас у тебя: '+v+' ₽ (×'+S.dbl.m+')</div>'+bt('gdt','Забрать '+v+' ₽')+(S.dbl.m<16&&!bs?bt('gdr','Рискнуть: шанс 45%, получишь '+v*2+' ₽'):'')+bt('games','← Назад'));return}
+ wb('<b>Удвоить или ничего</b>'+(msg?'<div>'+msg+'</div>':'')+nt('Выбери ставку. Каждая попытка: шанс 45% удвоить, иначе ставка сгорает. Забрать можно в любой момент, максимум ×16.')+(bs?nt(bs):DBS.map((v,i)=>bt('gds','Поставить '+v+' ₽',i,S.t<v)).join(''))+bt('games','← Назад'))}
+const qp=k=>{ensureDay();S.q.p[k]=(S.q.p[k]||0)+1},cti=k=>{S.ct[k]=(S.ct[k]||0)+1},ctx=(k,v)=>{S.ct[k]=Math.max(S.ct[k]||0,v)};
+function onOpen(x){OPENQ.push(x.id);const ss=LINES[D.indexOf(x.l)],k=ss.indexOf(x),N=ss.length,lp=!!CIR[x.l[0]],nb=[ss[k-1]||(lp?ss[N-1]:null),ss[k+1]||(lp?ss[0]:null)];if(nb.some(y=>y&&S.dn[y.id]))qp('adj')}
+const maxRun=()=>{let best=0;LINES.forEach((ss,li)=>{const N=ss.length,lp=!!CIR[D[li][0]];let run=0;for(let i=0;i<(lp?N*2:N);i++){if(S.dn[ss[i%N].id]){run++;best=Math.max(best,Math.min(run,N))}else run=0}});return best};
+const nLines=()=>D.filter((d,i)=>LINES[i].every(x=>S.dn[x.id])).length,lv3=()=>M.filter(x=>S.dn[x.id]&&(S.lv[x.id]||1)>=3).length;
+const ACH=[['st1','Открой первую станцию',()=>nd(),1,20000],['st10','Открой 10 станций',()=>nd(),10,50000],['st50','Открой 50 станций',()=>nd(),50,200000],['st100','Открой 100 станций',()=>nd(),100,500000],['st250','Открой 250 станций',()=>nd(),250,2000000],['st430','Вся Москва: 430 станций',()=>nd(),430,10000000],
+ ['run3','3 станции в ряд на одной линии',maxRun,3,30000],['run5','5 станций в ряд',maxRun,5,100000],['run10','10 станций в ряд',maxRun,10,400000],
+ ['ln1','Закрой 1 линию целиком',nLines,1,200000],['ln5','Закрой 5 линий',nLines,5,1000000],['ln10','Закрой 10 линий',nLines,10,3000000],
+ ['era3','Открой 3 эпохи',oe,3,150000],['era6','Открой все 6 эпох',oe,6,2000000],
+ ['sp100','Сделай 100 оборотов',()=>S.n,100,50000],['sp1000','Сделай 1 000 оборотов',()=>S.n,1000,500000],['sp5000','Сделай 5 000 оборотов',()=>S.n,5000,3000000],['sp10000','Сделай 10 000 оборотов',()=>S.n,10000,10000000],
+ ['epic','Открой первый эпик',()=>M.filter(x=>S.dn[x.id]&&x.r>=2).length,1,100000],['leg','Открой первую легенду',()=>M.filter(x=>S.dn[x.id]&&x.r===3).length,1,500000],
+ ['lv3','5 станций 3 уровня',lv3,5,300000],['lv5','Станция 5 уровня',()=>M.filter(x=>S.dn[x.id]&&(S.lv[x.id]||1)>=5).length,1,500000],
+ ['tr1','Купи первый поезд',()=>S.tr.length,1,50000],['tr3','3 поезда в депо',()=>S.tr.length,3,300000],['trc','Собери крафт-поезд',()=>S.tr.filter(t=>t.t>=4).length,1,500000],['tru','Улучши параметр поезда до 5',()=>Math.max(0,...S.tr.map(t=>Math.max(t.sp||1,t.cp||1,t.rl||1))),5,400000],
+ ['lk10','Удача ×10 и выше',()=>S.ct.lm||0,10,300000],['lk50','Удача ×50',()=>S.ct.lm||0,50,2000000],
+ ['qz','50 верных ответов в викторине',()=>S.ct.qc||0,50,200000],['sk7','Серия 7 дней подряд',()=>S.ct.sk||0,7,200000],
+ ['bet1','Выиграй ставку на линию',()=>S.ct.bw||0,1,50000],['tk1','Выиграй в счастливый билет',()=>S.ct.tw||0,1,50000],['rc1','Выиграй скачки',()=>S.ct.rw||0,1,50000],['jp','Джекпот билета ×500',()=>S.ct.jp||0,1,1000000],['db8','Удвой до ×8',()=>S.ct.dm||0,8,300000]];
+function dayQs(){const h=[...today()].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);let x=h;const idx=QS.map((_,i)=>i),out=[];for(let k=0;k<4;k++){x=(x*1103515245+12345)>>>0;out.push(idx.splice(x%idx.length,1)[0])}return out}
+function hasClaim(){ensureDay();return ACH.some(a=>!S.ach[a[0]]&&a[2]()>=a[3])||dayQs().some(i=>!S.q.c[i]&&(S.q.p[QS[i][0]]||0)>=QS[i][1])}
+function openQuests(){ensureDay();wb('<b>Задания дня · серия '+S.sk+' дн.</b>'+dayQs().map(i=>{const q=QS[i],p=Math.min(q[1],S.q.p[q[0]]||0),ok=p>=q[1];return bt('qc',q[2]+' ('+p+'/'+q[1]+') '+(S.q.c[i]?'✓ получено':ok?'— забрать +'+q[3]+' ₽':'(+'+q[3]+' ₽)'),i,!ok||S.q.c[i])}).join('')+nt('Каждый день новые 4 задания. Серия растёт от ежедневного бонуса в кассе: чем она длиннее, тем больше бонус (до 7 дней).')+bt('ach','Достижения')+bt('menu','← Назад'))}
+function openAch(){const L=ACH.map((a,i)=>({a,i,p:Math.min(a[3],a[2]()),d:!!S.ach[a[0]]}));L.forEach(x=>{x.ok=x.p>=x.a[3]&&!x.d;x.r=x.d?-1:x.ok?2:x.p/x.a[3]});L.sort((u,v)=>(v.ok-u.ok)||(u.d-v.d)||(v.r-u.r));
+ wb('<b>Достижения '+L.filter(x=>x.d).length+'/'+ACH.length+'</b>'+nt('За каждое достижение награда. Сначала те, что можно забрать.')+L.map(x=>bt('ac',x.a[1]+' · '+(x.a[3]>9999?Math.round(x.p/1000)+'k/'+Math.round(x.a[3]/1000)+'k':x.p+'/'+x.a[3])+(x.d?' ✓':x.ok?' — забрать +'+x.a[4]+' ₽':' (+'+x.a[4]+' ₽)'),x.i,!x.ok)).join('')+bt('menu','← Назад'))}
+let AC=null,qa=null;
+function tone(f,t,d,v){if(!S.snd)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain(),c=AC.currentTime+t;o.frequency.setValueAtTime(f,c);g.gain.setValueAtTime(0,c);g.gain.linearRampToValueAtTime(v||.12,c+.02);g.gain.exponentialRampToValueAtTime(.001,c+d);o.connect(g);g.connect(AC.destination);o.start(c);o.stop(c+d+.05)}catch(e){}}
+const sfx={spin(){if(!S.snd)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;o.type='triangle';o.frequency.setValueAtTime(120,t);o.frequency.exponentialRampToValueAtTime(700,t+1.3);g.gain.setValueAtTime(.06,t);g.gain.linearRampToValueAtTime(.001,t+1.5);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+1.5)}catch(e){}},
+ win(r){[660,880,1320].slice(0,r>=2?3:2).forEach((f,i)=>tone(f,i*.11,.35));if(r>=2)tone(1760,.35,.5,.1)},
+ door(n){if(!S.snd)return;tone(900,.5,.15,.1);tone(700,.75,.15,.1);try{const u=new SpeechSynthesisUtterance('Станция '+n+'. Осторожно, двери закрываются.');u.lang='ru-RU';speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}};
+function openMenu(){ensureDay();wb('<b>Меню · '+S.t+' ₽</b>'+bt('kassa','Касса')+bt('quests','Задания и серия')+bt('ach','Достижения')+bt('sets','Наборы')+bt('depot','Депо: поезда')+bt('games','Игры на рубли')+bt('quiz','Викторина')+bt('event','Событие дня',null,S.ev===today())+bt('pass','Паспорт')+bt('snd','Звук: '+(S.snd?'вкл':'выкл'))+bt('theme','Оформление: '+(S.theme==='pin'?'Pinterest':'тёмное'))+bt('reset','Начать заново')+bt('x','Закрыть'))}
+function openKassa(){const nx=S.skd===yest()?S.sk+1:1,dd=S.daily===today();wb('<b>Касса · '+S.t+' ₽</b>'+bt('bonus','Ежедневный бонус +'+(DAILY+Math.min(dd?S.sk:nx,7)*5000)+' ₽ (серия '+(dd?S.sk:nx)+' дн.)'+(dd?' · получен':''),null,dd)+bt('sell','Продать дубли ('+S.dup+') за '+S.dup*DUPP+' ₽',null,!S.dup)+bt('menu','← Назад'))}
+function openSets(){wb('<b>Наборы</b>'+SETS.map((q,i)=>{const a=M.filter(q.f),o=a.filter(x=>S.dn[x.id]).length,ok=o===a.length;return bt('sc',q.n+' '+o+'/'+a.length+(S.cl[i]?' ✓':ok?' — забрать +'+q.r+' ₽':' (+'+q.r+' ₽)'),i,!ok||S.cl[i])}).join('')+bt('menu','← Назад'))}
+const TRL=['Обычный','Редкий','Эпик','Легенда','Эпик (крафт)','Легенда (крафт)'];
+function openDepot(){const lines=S.tr.map(t=>'<div>'+TR[t.t][0]+' · '+D.find(d=>d[0]===t.l)[1]+' · '+Math.round(tinc(t))+' ₽/ч · ур. '+(t.sp||1)+'/'+(t.cp||1)+'/'+(t.rl||1)+'</div>').join('');
+ wb('<b>Депо · '+Math.round(inc())+' ₽/час</b>'+nt('Поезда ездят по линиям на карте: нажми на поезд, чтобы улучшить его. Накопление до '+capH()+' ч. Станции дают '+Math.round(stInc())+' ₽/час, поезда '+Math.round(inc()-stInc())+' ₽/час. Накоплено: '+pendT()+' ₽')+bt('tcol','Забрать '+pendT()+' ₽',null,pendT()<1)+TR.map((t,i)=>t[1]?bt('tb','Купить '+t[0]+' · '+t[1]+' ₽ · '+t[2]+' ₽/ч',i,S.t<t[1]||S.tr.length>=6):'').join('')+'<b>Крафт</b>'+nt('Запчасти падают за каждый дубль. У тебя: '+(S.pt||0)+'.')+TR.map((t,i)=>t[3]?bt('tcr','Собрать '+t[0]+' · '+t[3]+' запчастей · '+t[2]+' ₽/ч',i,(S.pt||0)<t[3]||S.tr.length>=6):'').join('')+'<div style="color:var(--dim);font-size:14px">В депо ('+S.tr.length+'/6):'+(lines||' пусто')+'</div>'+bt('menu','← Назад'))}
+function openPass(){const b=[];if(S.st.nt)b.push('Ночной пассажир');if(S.st.rt)b.push('Час пик');if(S.st.lk)b.push('Удачливый');if(S.tr.length)b.push('Машинист');if(D.some((d,i)=>LINES[i].every(x=>S.dn[x.id])))b.push('Закрыл линию');
+ wb('<b>Паспорт пассажира</b><div>Звание: <b>'+rank()+'</b></div><div>Станций: '+nd()+'/'+M.length+' · оборотов: '+S.n+' · серия: '+S.sk+' дн.</div><div>Значки: '+(b.join(', ')||'пока нет')+'</div>'+bt('share','Поделиться')+bt('menu','← Назад'))}
+function openQuiz(msg){ensureDay();if(S.qz.n>=10){wb('<b>Викторина</b><div>На сегодня вопросы закончились. Приходи завтра!</div>'+bt('menu','← Назад'));return}
+ const pl=M.filter(x=>open(x.e)&&cnt[x.n]===1),q=pl[Math.floor(Math.random()*pl.length)],nm=D.map(d=>d[1]).filter(n=>n!==q.l[1]).sort(()=>Math.random()-.5).slice(0,3),o=[q.l[1],...nm].sort(()=>Math.random()-.5);qa={a:o.indexOf(q.l[1]),o};
+ wb('<b>Викторина ('+S.qz.n+'/10)</b>'+(msg?'<div>'+msg+'</div>':'')+'<div>На какой линии станция «'+q.n+'»?</div>'+o.map((n,i)=>bt('qa',n,i)).join('')+bt('menu','← Назад'))}
+function openEvent(){if(S.ev===today())return;const e=EVS[new Date().getDate()%EVS.length];wb('<b>Событие дня</b><div>'+e[0]+'</div>'+bt('ev',e[1],0)+bt('ev',e[2],1)+bt('menu','← Назад'))}
+let opts=[];
+function openWheel(){if(S.tk<1)return;opts=M.filter(x=>open(x.e)&&!S.dn[x.id]).sort(()=>Math.random()-.5).slice(0,4);if(!opts.length)return;
+ wb('<b>Выбери станцию: +5 фрагментов</b>'+opts.map((x,i)=>'<button class="r'+x.r+'" data-i="'+i+'">'+x.n+' <span class="pr">'+(S.fr[x.id]||0)+'/'+cost(x)+'</span></button>').join('')+bt('sellw','Продать выбор за '+WSELL+' ₽')+bt('x','Отмена'))}
+$('wh').onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const a=b.dataset.a,i=+b.dataset.i,sv=()=>{save();ui()};
+ if(a){switch(a){case'menu':return openMenu();case'kassa':return openKassa();case'quests':return openQuests();case'sets':return openSets();case'depot':return openDepot();case'pass':return openPass();case'quiz':return openQuiz();case'event':return openEvent();
+  case'snd':S.snd=S.snd?0:1;sv();return openMenu();
+  case'theme':S.theme=S.theme==='pin'?'dark':'pin';applyTheme();sv();return openMenu();
+  case'bonus':S.sk=S.skd===yest()?S.sk+1:1;S.skd=S.daily=today();ctx('sk',S.sk);S.t+=DAILY+Math.min(S.sk,7)*5000;sv();return openKassa();
+  case'sell':S.t+=S.dup*DUPP;S.dup=0;sv();return openKassa();
+  case'qc':S.t+=QS[i][3];S.q.c[i]=1;sv();return openQuests();
+  case'sc':S.t+=SETS[i].r;S.cl[i]=1;sv();return openSets();
+  case'tb':S.t+=pendT();S.tc=Date.now();S.t-=TR[i][1];S.tr.push({t:i,l:D[Math.floor(Math.random()*D.length)][0]});sv();return openDepot();
+  case'tcol':S.t+=pendT();S.tc=Date.now();qp('col');sv();return openDepot();
+  case'tcr':{const tp=TR[i];if(!tp||!tp[3]||(S.pt||0)<tp[3]||S.tr.length>=6)return;S.t+=pendT();S.tc=Date.now();S.pt-=tp[3];S.tr.push({t:i,l:D[Math.floor(Math.random()*D.length)][0]});sv();sfx.win(3);return openDepot()}
+  case'qa':{const ok=i===qa.a;S.qz.n++;if(ok){S.t+=2000;S.q.p.quiz++;cti('qc')}sv();return openQuiz(ok?'Верно! +2000 ₽':'Неверно, правильный ответ: '+qa.o[qa.a])}
+  case'ev':{S.ev=today();let m;if(i===0){S.t+=4000;m='Спокойно. +4000 ₽'}else if(Math.random()<.5){S.t+=12000;m='Повезло! +12000 ₽'}else{S.t=Math.max(0,S.t-3000);m='Не повезло. −3000 ₽'}sv();return wb('<b>Событие дня</b><div>'+m+'</div>'+bt('menu','← Назад'))}
+  case'share':{const t='Моя метро-коллекция: '+nd()+'/'+M.length+' станций, звание: '+rank();try{if(navigator.share)navigator.share({text:t}).catch(()=>{});else navigator.clipboard.writeText(t)}catch(err){}return}
+  case'sellw':$('wh').style.display='none';S.tk--;S.t+=WSELL;sv();return;
+  case'ach':return openAch();
+  case'ac':{const a=ACH[i];if(!a||S.ach[a[0]]||a[2]()<a[3])return;S.ach[a[0]]=1;S.t+=a[4];sv();sfx.win(3);return openAch()}
+  case'games':return openGames();
+  case'gtk':return openTicket();
+  case'gtb':{if(betState())return openGames();const pr=TKP[i];if(S.t<pr)return;const d=String(Math.floor(Math.random()*1e6)).padStart(6,'0'),r=tkTier(d),pay=Math.round(pr*r[1]);S.t+=pay-pr;S.bl.net+=pr-pay;qp('game');sv();
+   wb('<b>Твой билет</b><div id="tkd" style="font-size:34px;letter-spacing:2px;text-align:center;font-family:Fraunces,Georgia,serif;margin:10px 0">• • • • • •</div><div id="tkr"></div>');let k=0;
+   const iv=setInterval(()=>{const el=$('tkd');if(!el){clearInterval(iv);return}k++;el.textContent=[...d].map((c,j)=>j<k?c:'•').join(' ');if(k>=6){clearInterval(iv);$('tkr').innerHTML=fm('<div style="text-align:center;margin:8px 0"><b>'+(pay?r[0]+': +'+pay+' ₽ (×'+fx(r[1])+')':'Не повезло, −'+pr+' ₽')+'</b></div>')+'<button data-a="gtk">Ещё билет</button><button data-a="games">← Назад</button>';if(pay){cti('tw');if(r[1]>=500)cti('jp');sfx.win(2)}}},380);return}
+  case'grc':return openRace();
+  case'grs':RSI=i;return openRace();
+  case'grt':{if(betState())return openGames();const a=RSA[RSI];if(S.t<a)return;let r=Math.random(),w=0;while(w<3&&r>RT[w][1]){r-=RT[w][1];w++}
+   const mu=rmu(RT[i][1]),pay=w===i?Math.round(a*mu):0;S.t+=pay-a;S.bl.net+=a-pay;qp('game');sv();
+   wb('<b>Скачки!</b>'+RT.map((t,k)=>'<div>'+(k===i?'➤ ':'')+t[0]+'</div><div class="rbar"><i id="rb'+k+'"></i></div>').join('')+'<div id="rr2"></div>');
+   const T=RT.map((_,k)=>k===w?5+Math.random()*.4:5.9+Math.random()*1.1),t0=Date.now();
+   const iv=setInterval(()=>{const t=(Date.now()-t0)/1000;if(!$('rb0')){clearInterval(iv);return}RT.forEach((_,k)=>{$('rb'+k).style.width=Math.min(100,t/T[k]*(1+.03*Math.sin(t*5+k*2))*100)+'%'});
+    if(t>T[w]+.15){clearInterval(iv);$('rb'+w).style.width='100%';$('rr2').innerHTML=fm('<div style="margin:10px 0"><b>Победил '+RT[w][0]+'. '+(pay?'Выигрыш +'+pay+' ₽ (×'+fx(mu)+')':'Ставка не зашла, −'+a+' ₽')+'</b></div>')+'<button data-a="grc">Ещё заезд</button><button data-a="games">← Назад</button>';if(pay){cti('rw');sfx.win(2)}}},60);return}
+  case'gdb':return openDbl();
+  case'gds':{if(betState())return openGames();const v=DBS[i];if(S.t<v)return;S.t-=v;S.dbl={a:v,m:1};qp('game');sv();return openDbl()}
+  case'gdr':{if(!S.dbl||betState())return openDbl();if(Math.random()<.45){S.dbl.m*=2;sv();if(S.dbl.m>=16){const v=S.dbl.a*S.dbl.m;ctx('dm',S.dbl.m);S.t+=v;S.bl.net+=S.dbl.a-v;S.dbl=null;sv();return openDbl('Максимум! ×16 забрано автоматически.')}return openDbl('Повезло! ×'+S.dbl.m)}S.bl.net+=S.dbl.a;S.dbl=null;sv();return openDbl('Не повезло: ставка сгорела.')}
+  case'gdt':{if(!S.dbl)return openDbl();const v=S.dbl.a*S.dbl.m;ctx('dm',S.dbl.m);S.t+=v;S.bl.net+=S.dbl.a-v;S.dbl=null;sv();return openDbl('Забрано '+v+' ₽.')}
+  case'bet':return openBet();
+  case'ba':S.betA=BA[i];sv();return openBet();
+  case'bs':case'bq':{const t=a==='bq'?S.lb:{i,a:S.betA||5000};if(S.t<t.a+PRICE){return wb('<b>Не хватает рублей</b>'+nt('Нужно '+(t.a+PRICE)+' ₽ (ставка и оборот).')+bt('bet','← К ставкам'))}PB={i:t.i,a:t.a};const p=odds(T[t.i].f),w=Math.round(t.a*pm(p));return wb('<b>Подтверди ставку</b><div>'+t.a+' ₽ на «'+T[t.i].n+'»</div>'+nt('Шанс '+Math.round(p*100)+'%. При выигрыше получишь '+w+' ₽ (чистыми +'+(w-t.a)+' ₽). Со счёта спишется '+(t.a+PRICE)+' ₽: ставка '+t.a+' и оборот '+PRICE+'.')+bt('bc','Поставить '+t.a+' ₽')+bt('bet','← Выбрать другую'))}
+  case'bc':S.bet={i:PB.i,a:PB.a};S.lb={i:PB.i,a:PB.a};sv();$('wh').style.display='none';return;
+  case'bx':S.bet=null;sv();return openBet();
+  case'brk':return wb('<b>Перерыв на 24 часа</b>'+nt('Ставки будут отключены на сутки, отменить перерыв нельзя. Остальная игра работает как обычно.')+bt('brk2','Да, взять перерыв')+bt('bet','← Назад'));
+  case'brk2':S.brk=Date.now()+864e5;S.bet=null;sv();return openBet();
+  case'reset':return wb('<b>Начать заново?</b>'+nt('Весь прогресс (станции, рубли, поезда, серия) будет удалён на этом устройстве. Отменить нельзя.')+bt('reset2','Да, начать заново')+bt('menu','← Назад'));
+  case'reset2':try{localStorage.removeItem(KEY)}catch(err){}location.reload();return;
+  case'x':$('wh').style.display='none';return}return}
+ $('wh').style.display='none';const x=opts[i];S.tk--;const o=oe(),pre=pendT();addFr(x,5);if(S.dn[x.id]){S.t+=pre;S.tc=Date.now();onOpen(x)}let n='бонус +5';if(oe()>o){S.t+=ERAB;n+=', открыта эпоха '+oe()+', +'+ERAB+' ₽'}save();ui();showSign(x,S.dn[x.id]?'full':'frag',n)};
+function showCol(){let h='<div class="st" style="margin:12px 0">'+[1,2,3,4,5,6].map(e=>'<span class="chip'+(open(e)?' own r1':' lk')+'">Эпоха '+e+' · '+EN[e-1]+' · '+(open(e)?Math.round(pct(e)*100)+'%':'🔒 нужно 70% прошлой')+'</span>').join('')+'</div><div style="color:var(--dim);font-size:14px">Нажми на станцию, чтобы поставить её в работу</div><div class="cols">';
+ D.forEach(d=>{const ss=M.filter(s=>s.l===d),o=ss.filter(s=>S.dn[s.id]).length;
+ h+='<div class="pc"><div class="lh"><span class="dot" style="background:'+d[2]+'"></span>'+d[1]+'<span class="pr">'+o+'/'+ss.length+(o===ss.length?' ✓':'')+'</span></div><div class="st">'
+ +ss.map(s=>open(s.e)?'<span class="chip r'+s.r+(S.dn[s.id]?' own':'')+(S.focus===s.id?' fc':'')+'" data-id="'+s.id+'">'+s.n+(S.dn[s.id]?'':' '+(S.fr[s.id]||0)+'/'+cost(s))+'</span>':'<span class="chip lk">???</span>').join('')+'</div></div>'});h+='</div>';
+ $('cl2').innerHTML=h;$('col').style.display='block'}
+$('cl2').onclick=e=>{const c=e.target.closest('[data-id]');if(!c||S.dn[c.dataset.id])return;S.focus=c.dataset.id;save();ui();const y=$('col').scrollTop;showCol();$('col').scrollTop=y};
+$('go').onclick=spin;$('bc').onclick=showCol;$('bw').onclick=openWheel;$('cl').onclick=()=>$('col').style.display='none';
+$('bk').onclick=openMenu;
+const rg=r=>{const c=M.filter(s=>s.r===r).map(cost);return Math.min(...c)+'–'+Math.max(...c)};
+const RS=[['Как играть','Один оборот жетона стоит '+PRICE+' ₽ (рубли виртуальные). Жми кнопку: жетон-шар закрутится, и тебе выпадет фрагмент случайной станции московского метро. Первые 5 оборотов с бонусом ×3.'],['Фрагменты','Станция открывается, когда собраны все её фрагменты: обычной нужно '+rg(0)+', редкой '+rg(1)+', эпику '+rg(2)+', легенде '+rg(3)+'. Чем позже построена станция, тем больше.'],['Станция в работе','В коллекции нажми на станцию: около половины фрагментов будет падать именно в неё. Всегда видно, сколько осталось до открытия.'],['Эпохи','Метро открывается по годам, всего 6 эпох. Следующая открывается, когда собрано 70% предыдущей, и даёт +'+ERAB+' ₽. Закрытые эпохи скрыты.'],['Дубликаты','Если выпала уже открытая станция, это дубль: он копится для улучшения этой станции. Дубли станций 5 уровня идут в общий счёт: 10 дублей дают «Выбор»: выбираешь одну из 4 станций и получаешь +5 фрагментов.'],['Удача и Час пик','Каждые 50 оборотов срабатывает «Удача»: множитель фрагментов от ×2 до ×50 и станция не ниже эпика. Ещё 4 раза в день по 20 минут (в 8:00, 13:00, 18:00 и 22:00) идёт «Час пик»: ×2 фрагментов и больше шанс на легенды.'],['Ставка на линию','Перед оборотом можно поставить на линию или группу линий: попадёт ли выпавшая станция туда. Игра показывает шанс и выигрыш (чуть ниже честного). Ставка действует один оборот. Есть лимит потерь за день, а кнопка «Перерыв» отключает ставки на сутки. Рубли виртуальные, 18+.'],['Уровни станций','Нажми на станцию на карте: откроется окно с информацией. Открытую станцию можно улучшать до 5 уровня за рубли и её дубли: она приносит больше рублей в час, а на карте растёт столбиком.'],['Игры на рубли','В меню есть игры на виртуальные рубли: ставка на линию, счастливый билет, скачки поездов и «удвоить или ничего». Рубли нельзя купить или вывести, возврат около 90%, 18+. Общий лимит потерь за день и кнопка «Перерыв» защищают от лишнего.'],['Поезда','Поезда из депо ездят по линиям на карте. Нажми на поезд: увидишь доход и накопление, а ещё можно улучшить скорость, вместимость и надёжность. Редкие поезда собираются в депо из запчастей, которые падают за каждый дубль.'],['Задания и достижения','Каждый день 4 новых задания. А ещё 35 достижений: например «3 станции в ряд», закрытая линия, поезд 5 уровня или джекпот. За каждое награда в рублях. Когда что-то можно забрать, на кнопке «Меню» горит точка.'],['Рубли и касса','Старт: 500000 ₽, ежедневный бонус +'+DAILY+' ₽. В кассе дубли продаются по '+DUPP+' ₽, а «Выбор» за '+WSELL+' ₽, и можно крутить дальше.']];
+$('rs').innerHTML=RS.map((r,i)=>'<div class="sl"><div class="n">'+(i+1)+' / '+RS.length+'</div><h3>'+r[0]+'</h3><p>'+fm(r[1])+'</p></div>').join('');
+$('dt').innerHTML=RS.map(()=>'<i></i>').join('');
+$('rs').onscroll=()=>{const i=Math.round($('rs').scrollLeft/$('rs').clientWidth);[...$('dt').children].forEach((d,k)=>d.className=k===i?'on':'')};
+function showRules(){$('ru').style.display='flex';$('rs').scrollLeft=0;$('rs').onscroll()}
+$('hp').onclick=showRules;$('rc').onclick=()=>{$('ru').style.display='none';S.seen=1;save()};
+if(!S.seen)showRules();
+
+const LW={'1':[[1.9,1.8],[.35,.3],[-.3,-.3],[-1,-1.5],[-1.6,-3]],'2':[[-.9,2.6],[-.55,1],[-.15,.1],[.2,-.7],[.7,-1.6],[1,-3]],'3':[[2.8,.6],[.7,.15],[-.5,-.1],[-1.5,.2],[-2.7,1.2]],'4':[[-1.7,-.45],[-1,-.3],[-.5,-.1],[-.1,0],[-.5,.15],[-1,.3],[-1.3,.4]],'6':[[.35,2.9],[.3,1],[.2,.1],[.1,-.6],[-.4,-1.5],[-.7,-3]],'7':[[-1.9,2.2],[-.9,.9],[-.1,.2],[.8,-.5],[1.9,-1.4],[2.1,-2.3]],'8':[[3,.9],[1.5,.2],[.35,-.12],[-.6,-.1],[-1.4,-.9],[-2,-2.4]],'9':[[.1,3],[-.05,1],[-.2,.2],[-.25,-.8],[-.2,-2.3]],'10':[[-.6,3.1],[-.4,1.4],[0,.5],[.45,-.4],[.9,-1.4],[.95,-2.6]],'12':[[-1.6,-2.2],[-.2,-2.5],[.9,-3.1]],'15':[[2.8,-2.6],[2.5,-1.6],[2.1,-.7],[1.6,-.1]],
+'D1':[[.9,4],[.6,2.6],[.2,1.6],[-.1,.9],[-.4,.3],[-1.4,.1],[-2.4,-.3],[-3.6,-.9]],'D2':[[-3.4,3.2],[-2.2,1.9],[-1,1.2],[0,1],[.9,.5],[1.1,-.3],[1.1,-1.4],[.5,-2.8],[0,-4.2]],'D3':[[-2.6,4.2],[-1.2,2.4],[0,1.3],[1,.6],[2,.2],[3.2,-.9],[4.2,-2.4]],'D4':[[4,1.2],[2.6,.5],[1.4,-.1],[.4,.6],[-.5,.5],[-1.4,-.4],[-2.2,-1.8],[-3,-3.8]]};
+const CIR={'5':[1,135,1,0],'11':[1.7,100,-1,.12],'14':[2.2,95,-1,-.12]},POS={},LINES=D.map(d=>M.filter(x=>x.l===d));
+D.forEach((d,li)=>{const id=d[0],ss=LINES[li],N=ss.length;
+ if(CIR[id]){const [r,a0,dr,h]=CIR[id];ss.forEach((q,i)=>{const a=(a0+dr*360*i/N)*Math.PI/180;POS[q.id]=[Math.cos(a)*r,h,-Math.sin(a)*r]})}
+ else{const w=LW[id],L=[0];for(let i=1;i<w.length;i++)L.push(L[i-1]+Math.hypot(w[i][0]-w[i-1][0],w[i][1]-w[i-1][1]));const T=L[L.length-1];
+  ss.forEach((q,i)=>{const t=T*i/(N-1);let k=1;while(k<w.length-1&&L[k]<t)k++;const u=(t-L[k-1])/((L[k]-L[k-1])||1);POS[q.id]=[w[k-1][0]+(w[k][0]-w[k-1][0])*u,id[0]==='D'?-.3:0,-(w[k-1][1]+(w[k][1]-w[k-1][1])*u)]})}});
+const mc=$('mc'),mx=mc.getContext('2d'),PT=new Map();let mw=0,mh=0,yaw=0,pit=1.05,zm=1.3,pan=[0,0],auto=1,sel='',mpts=[],pd=0,mv=0;
+function mres(){const d=Math.min(devicePixelRatio||1,2);mw=innerWidth;mh=innerHeight;mc.width=mw*d;mc.height=mh*d;mc.style.width=mw+'px';mc.style.height=mh+'px';mx.setTransform(d,0,0,d,0,0)}
+function proj(p){const c=Math.cos(yaw),s=Math.sin(yaw),x1=p[0]*c+p[2]*s,z1=-p[0]*s+p[2]*c,cp=Math.cos(pit),sp=Math.sin(pit),y2=p[1]*cp-z1*sp,z2=p[1]*sp+z1*cp,d=9-z2,f=mw*.5*9/5*zm;return[mw/2+pan[0]+f*x1/d,mh*.52+pan[1]-f*y2/d,d]}
+let FX=[],OPENQ=[],F='all',mtr=[],STi=0;
+const RING=['5','11','14'],fmatch=id=>F==='all'||(F==='metro'&&id[0]!=='D'&&id!=='11'&&id!=='14')||(F==='ring'&&RING.includes(id))||(F==='mcd'&&id[0]==='D')||(F[0]==='L'&&F.slice(2)===id);
+const LAND=[...Array(72)].map((_,i)=>{const a=i/72*6.283,r=3.9+.2*Math.sin(i*.6)+.14*Math.cos(i*1.3);return[Math.cos(a)*r,-.4,-Math.sin(a)*r]});
+const RIV=[[-4.2,2.6],[-3,1.9],[-1.9,1.6],[-1,.9],[-.4,.2],[.3,-.4],[.9,-1.3],[1.8,-1.7],[2.9,-1.4],[4.1,-2.2]].map(p=>[p[0],-.4,-p[1]]);
+const PARKS=[[2.3,1.1,.55],[1.1,2.4,.5],[-.3,-2.4,.6],[-2.6,-.4,.45]];
+function under(){const pn=PIN();
+ mx.beginPath();LAND.forEach((p,i)=>{const u=proj(p);i?mx.lineTo(u[0],u[1]):mx.moveTo(u[0],u[1])});mx.closePath();mx.fillStyle=pn?'#efe4d6':'#121a2a';mx.fill();mx.strokeStyle=pn?'#d9c9b6':'#ffffff1a';mx.lineWidth=1.5;mx.stroke();
+ mx.fillStyle=pn?'#d6e5c9':'#16301f';for(const [x,y,r] of PARKS){mx.beginPath();for(let i=0;i<=24;i++){const a=i/24*6.283,u=proj([x+Math.cos(a)*r*1.3,-.4,-(y+Math.sin(a)*r*.8)]);i?mx.lineTo(u[0],u[1]):mx.moveTo(u[0],u[1])}mx.fill()}
+ const pt=RIV.map(proj);mx.beginPath();mx.moveTo(pt[0][0],pt[0][1]);for(let i=1;i<pt.length-1;i++)mx.quadraticCurveTo(pt[i][0],pt[i][1],(pt[i][0]+pt[i+1][0])/2,(pt[i][1]+pt[i+1][1])/2);mx.lineTo(pt[pt.length-1][0],pt[pt.length-1][1]);mx.strokeStyle=pn?'#b9d6ea':'#1d4163';mx.lineWidth=Math.max(3,8*Math.sqrt(zm)*9/pt[4][2]);mx.lineCap='round';mx.stroke();
+ mx.setLineDash([6,6]);mx.strokeStyle=pn?'#c9b9a6':'#ffffff22';mx.lineWidth=1.5;mx.beginPath();for(let i=0;i<=72;i++){const a=i/72*6.283,u=proj([Math.cos(a)*3.1,-.4,-Math.sin(a)*3.1]);i?mx.lineTo(u[0],u[1]):mx.moveTo(u[0],u[1])}mx.stroke();mx.setLineDash([])}
+function mdraw(){mx.clearRect(0,0,mw,mh);const OP=[1,2,3,4,5,6].map(e=>open(e)),P={},it=[],now=Date.now();mpts=[];
+ for(const q of M)P[q.id]=proj(POS[q.id]);
+ under();FX=FX.filter(f=>now-f.t0<3500);
+ LINES.forEach((ss,li)=>{const d=D[li],N=ss.length,cl=!!CIR[d[0]],dim=!fmatch(d[0]);for(let i=0;i<(cl?N:N-1);i++){const a=ss[i],b=ss[(i+1)%N];it.push({z:(P[a.id][2]+P[b.id][2])/2,a,b,li,i,col:d[2],dim,lit:S.dn[a.id]&&S.dn[b.id]})}ss.forEach(q=>it.push({z:P[q.id][2],q,col:d[2],dim}))});
+ it.sort((u,v)=>v.z-u.z);mx.lineCap='round';
+ for(const t of it){if(t.a){const A=P[t.a.id],B=P[t.b.id],k=9/((A[2]+B[2])/2)*Math.sqrt(zm);mx.beginPath();mx.moveTo(A[0],A[1]);mx.lineTo(B[0],B[1]);
+   if(t.dim){mx.globalAlpha=.1;mx.strokeStyle=t.col;mx.lineWidth=1.2*k;mx.shadowBlur=0}
+   else if(t.lit){mx.globalAlpha=1;mx.strokeStyle=t.col;mx.lineWidth=3.6*k;mx.shadowColor=t.col;mx.shadowBlur=12}else{mx.globalAlpha=.25;mx.strokeStyle=t.col;mx.lineWidth=1.5*k;mx.shadowBlur=0}
+   mx.stroke();mx.shadowBlur=0;mx.globalAlpha=1;
+   let w=0;for(const f of FX)if(f.li===t.li&&now>=f.t0){const x=Math.abs(t.i-f.k)-(now-f.t0)/1000*12;if(x>-3&&x<1)w=Math.max(w,1-Math.abs(x+1)/2)}
+   if(w>0){mx.globalAlpha=w;mx.strokeStyle='#fff';mx.lineWidth=5*k;mx.shadowColor=t.col;mx.shadowBlur=18;mx.beginPath();mx.moveTo(A[0],A[1]);mx.lineTo(B[0],B[1]);mx.stroke();mx.shadowBlur=0;mx.globalAlpha=1}}
+  else{const q=t.q,A=P[q.id],dm=t.dim,r=Math.max(2.2,4.4*9/A[2]*Math.sqrt(zm))*(dm?.6:1),o=S.dn[q.id],f=(S.fr[q.id]||0)/cost(q);mpts.push({id:q.id,x:A[0],y:A[1],r});
+   mx.globalAlpha=dm?.3:1;mx.beginPath();mx.arc(A[0],A[1],r,0,7);mx.fillStyle=!OP[q.e-1]?(PIN()?'#d9d0c6':'#262c3b'):o?t.col:(PIN()?'#ebe4db':'#1b2232');mx.fill();
+   if(o&&!dm){mx.strokeStyle='#fff';mx.lineWidth=Math.max(1,r*.28);mx.stroke()}else if(!o&&f>0&&!dm){mx.beginPath();mx.arc(A[0],A[1],r,-1.57,-1.57+6.283*f);mx.strokeStyle=t.col;mx.lineWidth=Math.max(1.5,r*.45);mx.stroke()}
+   if(o&&!dm){const lv=S.lv[q.id]||1;let cx2=A[0],cy2=A[1];if(lv>1){const T2=proj([POS[q.id][0],POS[q.id][1]+(lv-1)*.12,POS[q.id][2]]);cx2=T2[0];cy2=T2[1];mx.beginPath();mx.moveTo(A[0],A[1]);mx.lineTo(cx2,cy2);mx.strokeStyle=t.col;mx.lineWidth=r*.9;mx.lineCap='round';mx.stroke();mx.beginPath();mx.arc(cx2,cy2,r*1.05,0,7);mx.fillStyle=t.col;mx.fill();mx.strokeStyle='#fff';mx.lineWidth=Math.max(1,r*.28);mx.stroke()}
+    if(lv>=3){const ph=now/380+q.id.length*1.7+q.id.charCodeAt(q.id.length-1);mx.globalAlpha=.16+.12*Math.sin(ph);mx.beginPath();mx.arc(cx2,cy2,r*(2+.4*Math.sin(ph)+(lv-3)*.3),0,7);mx.fillStyle=t.col;mx.fill();mx.globalAlpha=1}
+    if(lv===5){mx.strokeStyle='#f2b705';mx.lineWidth=Math.max(2,r*.4);mx.shadowColor='#f2b705';mx.shadowBlur=10;mx.beginPath();mx.arc(cx2,cy2,r*1.7,0,7);mx.stroke();mx.shadowBlur=0}}
+   mx.globalAlpha=1;
+   for(const fx of FX)if(fx.id===q.id){const ag=(now-fx.t0)/1000;if(ag>=0&&ag<1.5){mx.globalAlpha=1-ag/1.5;mx.strokeStyle='#f2b705';mx.lineWidth=3;mx.beginPath();mx.arc(A[0],A[1],r*(1.5+ag*8),0,7);mx.stroke();mx.fillStyle='#fff';mx.beginPath();mx.arc(A[0],A[1],r*(1+(1-ag/1.5)*1.2),0,7);mx.fill();mx.globalAlpha=1}}
+   if(sel===q.id){mx.beginPath();mx.arc(A[0],A[1],r*2,0,7);mx.strokeStyle='#f2b705';mx.lineWidth=2;mx.stroke()}}}
+ drawTrains(P,now);
+ const q=BY[sel];$('ml').textContent=q?q.n+' · '+q.l[1]+' · '+(S.dn[q.id]?'открыта':OP[q.e-1]?(S.fr[q.id]||0)+'/'+cost(q):'эпоха '+q.e+' закрыта'):nd()+'/'+M.length+' станций · линий '+D.filter((d,i)=>LINES[i].every(x=>S.dn[x.id])).length+'/'+D.length}
+function renderMf(){const o=[['all','Все'],['metro','Метро'],['ring','Кольца'],['mcd','МЦД']];if(F[0]==='L')o.push(['all','Линия: '+D.find(d=>d[0]===F.slice(2))[1]+' ✕']);$('mf').innerHTML=o.map(x=>'<button data-f="'+x[0]+'"'+(x[0]===F||(F[0]==='L'&&x[1][0]==='Л')?' class="on"':'')+'>'+x[1]+'</button>').join('')}
+$('mf').onclick=e=>{const b=e.target.closest('button');if(!b)return;F=b.dataset.f;renderMf()};
+function mframe(){if($('mp').style.display==='none')return;if(auto)yaw+=.0025;if(ca){ca.t+=.05;const k=Math.min(1,ca.t),e=k*k*(3-2*k);zm=ca.z0+(ca.Z-ca.z0)*e;pan=[ca.p0[0]+(ca.tp[0]-ca.p0[0])*e,ca.p0[1]+(ca.tp[1]-ca.p0[1])*e];if(k>=1)ca=null}mdraw();requestAnimationFrame(mframe)}
+function mopen(){qp('map');$('mp').style.display='block';mres();renderMf();const q=OPENQ.splice(0);q.forEach((id,i)=>{const st=BY[id],li=D.indexOf(st.l);FX.push({id,li,k:LINES[li].indexOf(st),t0:Date.now()+500+i*1100})});if(q.length)focusCam(q[q.length-1]);mframe()}
+mc.addEventListener('pointerdown',e=>{ca=null;mc.setPointerCapture(e.pointerId);PT.set(e.pointerId,[e.clientX,e.clientY]);auto=0;mv=0;if(PT.size===2){const v=[...PT.values()];pd=Math.hypot(v[0][0]-v[1][0],v[0][1]-v[1][1])}});
+mc.addEventListener('pointermove',e=>{const o=PT.get(e.pointerId);if(!o)return;const dx=e.clientX-o[0],dy=e.clientY-o[1];mv+=Math.abs(dx)+Math.abs(dy);
+ if(PT.size===1){yaw+=dx*.008;pit=Math.max(.45,Math.min(1.5,pit+dy*.006))}
+ else{const v=[...PT.entries()].map(x=>x[1]),mid0=[(v[0][0]+v[1][0])/2,(v[0][1]+v[1][1])/2];PT.set(e.pointerId,[e.clientX,e.clientY]);const w=[...PT.values()],d=Math.hypot(w[0][0]-w[1][0],w[0][1]-w[1][1]),mid=[(w[0][0]+w[1][0])/2,(w[0][1]+w[1][1])/2];
+  zm=Math.max(.7,Math.min(6,zm*d/(pd||d)));pd=d;pan[0]+=mid[0]-mid0[0];pan[1]+=mid[1]-mid0[1];return}
+ PT.set(e.pointerId,[e.clientX,e.clientY])});
+mc.addEventListener('pointerup',e=>{if(PT.size===1&&mv<8){let tb=null,td=30;for(const q of mtr){const d=Math.hypot(q.x-e.clientX,q.y-e.clientY);if(d<td){td=d;tb=q}}if(tb){openTrain(tb.i);PT.delete(e.pointerId);return}let b=null,bd=26;for(const p of mpts){const d=Math.hypot(p.x-e.clientX,p.y-e.clientY);if(d<bd){bd=d;b=p}}if(b)openStation(b.id);else{sel='';$('sw').style.display='none'}}PT.delete(e.pointerId)});
+mc.addEventListener('pointercancel',e=>PT.delete(e.pointerId));
+mc.addEventListener('wheel',e=>{e.preventDefault();zm=Math.max(.7,Math.min(6,zm*(e.deltaY<0?1.15:.87)))},{passive:false});
+$('m1').onclick=()=>{zm=Math.min(6,zm*1.3)};$('m2').onclick=()=>{zm=Math.max(.7,zm/1.3)};
+let ca=null;
+function focusCam(id){auto=0;const z0=zm,p0=[pan[0],pan[1]],Z=Math.max(zm,2.4);zm=Z;pan=[0,0];const P=proj(POS[id]);zm=z0;pan=p0;ca={z0,Z,p0,tp:[mw/2-P[0],mh*.3-P[1]],t:0}}
+function openStation(id){const s=BY[id];if(!s)return;sel=id;const ss=LINES[D.indexOf(s.l)],k=ss.indexOf(s),N=ss.length,lp=!!CIR[s.l[0]],pv=ss[k-1]||(lp?ss[N-1]:null),nx=ss[k+1]||(lp?ss[0]:null),tr=M.filter(x=>x.n===s.n&&x!==s),lv=S.dn[id]?(S.lv[id]||1):0,c=cost(s),f=S.fr[id]||0,op=open(s.e);
+ let h='<div style="display:flex;justify-content:space-between;gap:8px"><div><h3>'+s.n+'</h3><div class="meta"><span class="dot" style="background:'+s.l[2]+';display:inline-block;margin-right:6px"></span>'+s.l[1]+' · эпоха '+EN[s.e-1]+' · '+RN[s.r]+'</div></div><button data-a="swx">✕</button></div><div><b>'+(lv?'Открыта · уровень '+lv+'/5':op?'Не открыта: '+f+'/'+c+' фрагментов':'Эпоха '+s.e+' закрыта')+'</b></div>';
+ if(lv){h+='<div class="meta">Доход: '+Math.round(SB[lv-1]*RM[s.r])+' ₽/час</div>';
+  if(lv<5){const rc=RC2[lv-1],dc=DC[lv-1],have=S.dc[id]||0;h+='<div class="meta">Следующий уровень: доход '+Math.round(SB[lv]*RM[s.r])+' ₽/час. Нужно '+rc+' ₽ и '+dc+' дублей этой станции (у тебя '+have+').</div><button class="pr1" data-a="swup"'+(S.t>=rc&&have>=dc?'':' disabled')+'>Улучшить до уровня '+(lv+1)+'</button>'}else h+='<div class="meta">Максимальный уровень.</div>'}
+ else if(op)h+='<button data-a="swfc">'+(S.focus===id?'✓ В работе':'Поставить в работу')+'</button>';
+ if(lv&&FACTS[s.n])h+='<div class="meta" style="font-style:italic;margin-top:8px">'+FACTS[s.n]+'</div>';
+ h+='<div class="meta" style="margin-top:8px">Соседи: '+[pv,nx].filter(Boolean).map(x=>'<button data-a="swo" data-i="'+M.indexOf(x)+'">'+x.n+'</button>').join('')+'</div>';
+ if(tr.length)h+='<div class="meta">Пересадка: '+tr.map(x=>'<button data-a="swo" data-i="'+M.indexOf(x)+'">'+x.l[1]+'</button>').join('')+'</div>';
+ h+='<div style="margin-top:6px"><button data-a="swl">Подсветить линию</button></div>';$('sw').innerHTML=fm(h);$('sw').style.display='block';focusCam(id)}
+const TRC=['#7b8aa3','#2bb5a7','#3a82f6','#f2b705','#a855f7','#ec4899'],NW=[3,4,5,6,7,8];
+const TST=[['Скорость','sp','+12% дохода и скорость хода'],['Вместимость','cp','+18% дохода'],['Надёжность','rl','+10% дохода и +2 ч накопления']];
+function tinc(t){return TR[t.t][2]*(1+.12*((t.sp||1)-1)+.18*((t.cp||1)-1)+.1*((t.rl||1)-1))}
+function capH(){return 8+2*Math.max(0,...S.tr.map(t=>(t.rl||1)-1))}
+const tcost=(t,L)=>Math.max(1000,Math.round(TR[t.t][2]*30*L/100)*100);
+function drawTrains(P,now){mtr=[];S.tr.forEach((tr,i)=>{const li=D.findIndex(d=>d[0]===tr.l),ss=LINES[li],N=ss.length,loop=!!CIR[tr.l],L=loop?N:2*(N-1),spd=1+.2*((tr.sp||1)-1),per=(16000+i*2300)/spd,S0=((now/per)%1)*L,nw=NW[tr.t]||3,col=TRC[tr.t]||'#fff';
+ const at=v=>{v=((v%L)+L)%L;const idx=loop?v:(v<=N-1?v:L-v),k=Math.min(loop?N-1:N-2,Math.floor(idx)),u=idx-k,A=P[ss[k].id],B=P[ss[(k+1)%N].id];return[A[0]+(B[0]-A[0])*u,A[1]+(B[1]-A[1])*u,A[2]]};
+ const pts=[];for(let w=0;w<=nw;w++)pts.push(at(S0-w*.22));
+ const wd=Math.max(4,5*9/pts[0][2]*Math.sqrt(zm));mx.lineCap='round';
+ for(let w=0;w<nw;w++){const a=pts[w],b=pts[w+1];mx.beginPath();mx.moveTo(a[0],a[1]);mx.lineTo(b[0],b[1]);mx.strokeStyle='#fff';mx.lineWidth=wd+2.5;mx.stroke();mx.strokeStyle=col;mx.lineWidth=wd;mx.shadowColor=col;mx.shadowBlur=w===0?10:0;mx.stroke();mx.shadowBlur=0;
+  mx.strokeStyle='#ffffffcc';mx.lineWidth=Math.max(1,wd*.28);mx.setLineDash([wd*.5,wd*.9]);mx.beginPath();mx.moveTo(a[0],a[1]);mx.lineTo(b[0],b[1]);mx.stroke();mx.setLineDash([])}
+ const h=pts[0];mx.beginPath();mx.arc(h[0],h[1],wd*.45,0,7);mx.fillStyle='#fff7b0';mx.shadowColor='#fff7b0';mx.shadowBlur=14;mx.fill();mx.shadowBlur=0;mtr.push({i,x:h[0],y:h[1]})})}
+function openTrain(i){const t=S.tr[i];if(!t)return;STi=i;sel='';const tp=TR[t.t],ln=D.find(d=>d[0]===t.l),hrs=Math.min(capH(),(Date.now()-S.tc)/36e5);
+ let h='<div style="display:flex;justify-content:space-between;gap:8px"><div><h3>'+tp[0]+'</h3><div class="meta"><span class="dot" style="background:'+TRC[t.t]+';display:inline-block;margin-right:6px"></span>'+TRL[t.t]+' · '+NW[t.t]+' вагонов · линия «'+ln[1]+'»</div></div><button data-a="swx">✕</button></div>';
+ h+='<div><b>Доход: '+Math.round(tinc(t))+' ₽/час</b></div><div class="meta">Накоплено этим поездом: '+Math.floor(hrs*tinc(t))+' ₽ (до '+capH()+' ч)</div><div class="rbar"><i style="width:'+Math.min(100,hrs/capH()*100)+'%"></i></div>';
+ TST.forEach((x,k)=>{const L=t[x[1]]||1,c=tcost(t,L);h+='<div class="meta" style="margin-top:6px">'+x[0]+': уровень '+L+'/5 · '+x[2]+'</div><div class="rbar"><i style="width:'+L*20+'%"></i></div>'+(L<5?'<button class="pr1" data-a="tsu" data-i="'+k+'"'+(S.t>=c?'':' disabled')+'>Улучшить за '+c+' ₽</button>':'<div class="meta">Максимум</div>')});
+ h+='<div style="margin-top:8px"><button data-a="tln">Другая линия</button></div>';$('sw').innerHTML=fm(h);$('sw').style.display='block'}
+$('sw').onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const a=b.dataset.a,id=sel;
+ if(a==='tsu'){const t=S.tr[STi],k=TST[+b.dataset.i][1],L=t[k]||1;if(L>=5)return;const c=tcost(t,L);if(S.t<c)return;S.t+=pendT();S.tc=Date.now();S.t-=c;t[k]=L+1;qp('up');save();ui();sfx.win(2);return openTrain(STi)}
+ if(a==='tln'){const t=S.tr[STi],ix=D.findIndex(d=>d[0]===t.l);t.l=D[(ix+1)%D.length][0];save();return openTrain(STi)}
+ if(a==='swx'){$('sw').style.display='none';sel='';return}
+ if(a==='swl'){F='L:'+BY[id].l[0];renderMf();return}
+ if(a==='swo'){return openStation(M[+b.dataset.i].id)}
+ if(a==='swfc'){S.focus=id;save();ui();return openStation(id)}
+ if(a==='swup'){const lv=S.lv[id]||1;if(lv>=5)return;const rc=RC2[lv-1],dc=DC[lv-1];if(S.t<rc||(S.dc[id]||0)<dc)return;S.t+=pendT();S.tc=Date.now();S.t-=rc;S.dc[id]-=dc;S.lv[id]=lv+1;qp('up');save();ui();sfx.win(2);openStation(id)}};
+$('bm').onclick=mopen;$('mx').onclick=()=>{$('mp').style.display='none';$('sw').style.display='none'};addEventListener('resize',()=>{if($('mp').style.display!=='none')mres()});
+if(window.Telegram&&Telegram.WebApp)Telegram.WebApp.ready();
+ui();setInterval(ui,30000);
+</script></body></html>
